@@ -79,6 +79,66 @@ class Api {
     }
 
     /**
+     * Request Refill
+     */
+    public function refill($order_id) {
+        $result = $this->connect(array(
+            'key'    => $this->api_key,
+            'action' => 'refill',
+            'order'  => $order_id
+        ));
+        return json_decode($result);
+    }
+
+    /**
+     * Multiple Refill
+     */
+    public function multiRefill($order_ids) {
+        $result = $this->connect(array(
+            'key'     => $this->api_key,
+            'action'  => 'refill',
+            'orders'  => implode(',', (array)$order_ids)
+        ));
+        return json_decode($result);
+    }
+
+    /**
+     * Refill Status
+     */
+    public function refillStatus($refill_id) {
+        $result = $this->connect(array(
+            'key'     => $this->api_key,
+            'action'  => 'refill_status',
+            'refill'  => $refill_id
+        ));
+        return json_decode($result);
+    }
+
+    /**
+     * Multiple Refill Status
+     */
+    public function multiRefillStatus($refill_ids) {
+        $result = $this->connect(array(
+            'key'     => $this->api_key,
+            'action'  => 'refill_status',
+            'refills' => implode(',', (array)$refill_ids)
+        ));
+        return json_decode($result);
+    }
+
+    /**
+     * Cancel Orders
+     */
+    public function cancel($order_ids) {
+        $result = $this->connect(array(
+            'key'     => $this->api_key,
+            'action'  => 'cancel',
+            'orders'  => implode(',', (array)$order_ids)
+        ));
+        return json_decode($result);
+    }
+
+    /**
      * Connect to panel
      */
     private function connect($post) {

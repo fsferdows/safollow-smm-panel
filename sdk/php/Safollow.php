@@ -86,7 +86,19 @@ class SafollowClient {
         return $this->request('refill', ['order' => (string)$orderId]);
     }
 
+    public function multiRefill(array $orderIds): array {
+        return $this->request('refill', ['orders' => implode(',', $orderIds)]);
+    }
+
     public function getRefillStatus(int $refillId): array {
         return $this->request('refill_status', ['refill' => (string)$refillId]);
+    }
+
+    public function multiRefillStatus(array $refillIds): array {
+        return $this->request('refill_status', ['refills' => implode(',', $refillIds)]);
+    }
+
+    public function cancel(array $orderIds): array {
+        return $this->request('cancel', ['orders' => implode(',', $orderIds)]);
     }
 }

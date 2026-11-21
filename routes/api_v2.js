@@ -165,24 +165,68 @@ router.all('/', async (req, res) => {
     }
 
     case 'refill': {
-      const { order } = params;
-      if (!order) return res.status(400).json({ error: 'Missing parameter: order' });
+      const { order, orders } = params;
+      const targetOrders = orders ? String(orders).split(',').map(s => s.trim()) : [order];
+      
+      const results = [];
+      for (const ordId of targetOrders) {
+        if (!ordId) continue;
+        const ord = db.prepare('SELECT id, refill_status, status FROM orders WHERE id = ? AND user_id = ?').get(ordId, user.id);
+        if (ord && (ord.status === 'Completed' || ord.status === 'Partial')) {
+          db.prepare("UPDATE orders SET refill_status = 'Requested' WHERE id = ?").run(ord.id);
+          results.push({ order: ord.id, refill: ord.id });
+        } else {
+          results.push({ order: ordId, error: 'Cannot refill order in current state' });
+        }
+      }
 
-      const ord = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(order, user.id);
-      if (!ord) return res.status(400).json({ error: 'Incorrect order ID' });
-
-      db.prepare("UPDATE orders SET refill_status = 'Requested' WHERE id = ?").run(order);
-      return res.json({ refill: ord.id });
+      if (orders) {
+        return res.json(results);
+      }
+      return res.json(results[0]?.refill ? { refill: results[0].refill } : { error: results[0]?.error || 'Failed to request refill' });
     }
 
     case 'refill_status': {
-      const { refill } = params;
-      if (!refill) return res.status(400).json({ error: 'Missing parameter: refill' });
+      const { refill, refills } = params;
+      const targetRefills = refills ? String(refills).split(',').map(s => s.trim()) : [refill];
 
-      const ord = db.prepare('SELECT refill_status FROM orders WHERE id = ? AND user_id = ?').get(refill, user.id);
-      if (!ord) return res.status(400).json({ error: 'Incorrect refill ID' });
+      const results = {};
+      for (const rId of targetRefills) {
+        if (!rId) continue;
+        const ord = db.prepare('SELECT refill_status FROM orders WHERE id = ? AND user_id = ?').get(rId, user.id);
+        results[rId] = ord ? { status: ord.refill_status || 'Completed' } : { error: 'Incorrect refill ID' };
+      }
 
-      return res.json({ status: ord.refill_status });
+      if (refills) {
+        return res.json(results);
+      }
+      return res.json(results[refill] || { error: 'Incorrect refill ID' });
+    }
+
+    case 'cancel': {
+      const { order, orders } = params;
+      const targetOrders = orders ? String(orders).split(',').map(s => s.trim()) : [order];
+
+      const results = [];
+      for (const ordId of targetOrders) {
+        if (!ordId) continue;
+        const ord = db.prepare('SELECT id, status, charge FROM orders WHERE id = ? AND user_id = ?').get(ordId, user.id);
+        if (ord && (ord.status === 'Pending' || ord.status === 'Processing')) {
+          // Refund user balance and mark canceled
+          db.transaction(() => {
+            db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(ord.charge, user.id);
+            db.prepare("UPDATE orders SET status = 'Canceled', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(ord.id);
+          })();
+          results.push({ order: ord.id, cancel: { status: 'Canceled' } });
+        } else {
+          results.push({ order: ordId, cancel: { error: 'Order cannot be canceled in current state' } });
+        }
+      }
+
+      if (orders) {
+        return res.json(results);
+      }
+      return res.json(results[0]?.cancel || { error: 'Cancel rejected' });
     }
 
     case 'balance': {
