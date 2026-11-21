@@ -1,73 +1,78 @@
-# SAFollow V3.0 – Bangladesh SMM Reseller Platform
+<div align="center">
 
-A full-stack, production-grade **Social Media Marketing (SMM) Reseller Panel** reverse-engineered and reconstructed using the **REA (Reverse Engineer Anything)** methodology to match and provide the exact services offered by [https://www.safollow.com/](https://www.safollow.com/).
+# ⚡ SAFollow Enterprise SMM Panel Platform & Universal API Hub
 
----
+### *High-Performance, Self-Hosted Social Media Marketing (SMM) Reseller Platform & Direct Delivery Engine*
 
-## 🌟 Key Features
+[![GitHub Stars](https://img.shields.io/github/stars/fsferdows/safollow-smm-panel?style=for-the-badge&color=ffd700)](https://github.com/fsferdows/safollow-smm-panel/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/fsferdows/safollow-smm-panel?style=for-the-badge&color=60a5fa)](https://github.com/fsferdows/safollow-smm-panel/network/members)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x%20LTS-green.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg?style=for-the-badge&logo=docker)](https://www.docker.com/)
+[![Built with Love in Bangladesh](https://img.shields.io/badge/Made%20in-Bangladesh%20🇧🇩-006a4e?style=for-the-badge)](https://github.com/fsferdows)
 
-### 1. Public High-Converting Web Application
-- **Modern Responsive Design**: Built with clean CSS variables, glassmorphism, responsive cards, and automated theme switcher (🌙 Dark / ☀️ Light mode).
-- **Multi-Currency Support**: Instant 1-click toggle between **$ USD** and **৳ BDT** (Bangladeshi Taka) across all prices, calculators, and catalogs.
-- **Interactive Price Calculator**: Live hero widget where users select a social platform, pick a service, input quantity, and get real-time price estimation.
-- **Live Catalog Explorer (`/services`)**: Full searchable list of **1,034+ real SAFollow services** with instant filtering, min/max limits, average delivery times, and modal descriptions.
-- **Floating Live Support**: Integrated floating WhatsApp and Telegram quick-contact widgets matching SAFollow's 24/7 customer service setup.
-- **Dedicated Legal & Help Pages**: Complete **API Documentation (`/api-docs`)**, **Terms & Refund Policy (`/terms`)**, and **FAQ (`/faq`)**.
+**Created & Maintained with passion by [FS Ferdows](https://github.com/fsferdows) / [LateBright](https://github.com/fsferdows)**
 
-### 2. User Dashboard
-- **Authentication**: Secure JWT-based authentication with bcrypt password hashing, session cookies, and registration.
-- **Single Order Placement**: Dynamic category and service selection with live cost computation and automatic balance deduction.
-- **Mass Order System**: Multi-line bulk ordering in format `service_id|link|quantity` with syntax validation and instant summary report.
-- **Order Tracking & Refills**: Real-time order progress tracking (`Pending`, `Processing`, `In progress`, `Completed`, `Partial`, `Canceled`) with **30-Day Free Refill** trigger button.
-- **Add Funds / Local Bangladeshi Deposits**:
-  - **bKash** (Personal Send Money + Transaction ID verification)
-  - **Nagad** (Personal Send Money + TrxID verification)
-  - **Rocket** (Personal Send Money + TrxID verification)
-  - **Binance Pay / Crypto** (USDT BEP20 / TRC20 Pay ID)
-  - **Credit / Debit Cards** (Stripe integration)
-- **24/7 Support Ticket System**: Open tickets with category subjects and reference IDs; threaded conversation with admin support.
-- **API Key Manager**: Generate, view, copy, and regenerate personal API keys.
+[Live Demo](http://localhost:3001) • [API Documentation](#-universal-smm-reseller-api-v2) • [SDKs](#-official-multi-language-sdk-suite) • [Installation](#-quick-start-in-60-seconds) • [Developer Spotlight](#-about-the-developer)
 
-### 3. Industry-Standard SMM Reseller API v2 (`/api/v2` and `/api`)
-Compatible with all third-party reseller tools, child panels, and standard SMM scripts (RentalPanel, Perfect Panel, SmartStore):
-
-| Action | Parameters | Description |
-| :--- | :--- | :--- |
-| `services` | `key`, `action: "services"` | Returns all active services, rates, min, max, refill flag. |
-| `add` | `key`, `action: "add"`, `service`, `link`, `quantity` | Deducts balance and places an order. Returns `{"order": id}`. |
-| `status` | `key`, `action: "status"`, `order` or `orders` | Returns charge, start_count, status, remains, currency. |
-| `refill` | `key`, `action: "refill"`, `order` | Requests automated refill for supported order. |
-| `refill_status` | `key`, `action: "refill_status"`, `refill` | Queries current refill status. |
-| `balance` | `key`, `action: "balance"` | Returns available user balance and currency in USD. |
-
-### 4. Admin Management Center
-- **Executive Analytics**: Total revenue, order counters, pending orders, user counts, and pending payment verifications.
-- **Order Management**: Change order status, update start count/remains, or issue 1-click full refunds to user balance.
-- **Service Management**: Create new services, edit rates/limits, delete, or run **Bulk Price Markups** (e.g. increase all prices by 10%).
-- **User Control**: View users, add or deduct wallet balance manually, activate or suspend accounts.
-- **Payment Verification**: Review pending bKash/Nagad/Binance deposits and click **Approve** (automatically credits user balance) or **Reject**.
-- **Ticket Desk**: Reply to user support requests in real-time.
-- **Upstream Provider Engine**: Connect any upstream SMM API (URL + API Key), check real-time provider balance, and automatically forward user orders!
-- **System Settings**: Update site name, BDT exchange rate, WhatsApp/Telegram numbers, deposit phone numbers, and announcement banner text.
+</div>
 
 ---
 
-## 🛠️ Technology Stack
+## 📖 Overview
 
-- **Runtime**: Node.js (v18+)
-- **Backend Framework**: Express.js
-- **Database**: SQLite (via `better-sqlite3` with WAL mode enabled for high-concurrency read/write operations)
-- **Security**: `bcryptjs` password hashing, `jsonwebtoken`, `cookie-parser`, CORS
-- **Frontend**: Clean Vanilla JavaScript (no heavy bundlers needed), Modern CSS3, Font Awesome 6, responsive typography
+**SAFollow V3.0** is an open-source, full-stack **Social Media Marketing (SMM) Reseller Platform and API Gateway**. Reconstructed using advanced **Reverse Engineering (REA)** principles, it delivers a turnkey solution to run your own wholesale SMM reseller business or private social growth agency.
+
+Whether you want to connect to global wholesale SMM providers (Ezkify, JustAnotherPanel, Peakerr, SAFollow) or deliver orders directly via internal bot pools, this platform is production-ready out of the box.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Key Highlights & Architecture
 
-### 1. Installation
-Clone the repository and install dependencies:
+```
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │           Your Customers & API Clients                 │
+                                  │      (Web Dashboard, Child Panels, PHP/Python SDK)     │
+                                  └──────────────────────────┬─────────────────────────────┘
+                                                             │
+                                                             ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │       ⚡ SAFollow Core Gateway & Universal API v2       │
+                                  │           (Node.js + SQLite WAL + Express.js)          │
+                                  └──────────┬─────────────────────────────────┬───────────┘
+                                             │                                 │
+                 ┌───────────────────────────┴──────────┐   ┌──────────────────┴───────────┐
+                 │                                      │   │                              │
+                 ▼                                      ▼   ▼                              ▼
+┌─────────────────────────────────┐   ┌───────────────────────────────────┐  ┌─────────────────────────────────┐
+│  🤖 Reverse-Engineered Engine   │   │  🌐 Multi-Provider Failover Router│  │  💳 Native Payment Gateways     │
+│  - Instagram Private Web Client │   │  - Auto-Priority Dispatch (1..N)  │  │  - bKash (Personal/Send Money) │
+│  - Dynamic Profile Lookup (PK)  │   │  - Wholesale SMM v2 Gateway       │  │  - Nagad & Rocket Instant       │
+│  - Friendships Create & Likes   │   │  - Balance Sync & Auto-Refunds    │  │  - Binance Pay / Crypto (USDT)  │
+└─────────────────────────────────┘   └───────────────────────────────────┘  └─────────────────────────────────┘
+```
+
+### 💎 What's Inside:
+* **Universal SMM API v2**: 100% compatible with SmartPanel, PerfectPanel, and RentalPanel child panels (`/api/v2`, `/api/v1`, `/api`).
+* **🤖 Reverse-Engineered Private Instagram Client**: Live lookup of internal User IDs (`pk`) and start counts, friendship creation (`/api/v1/friendships/create/`), and media likes (`/api/v1/web/likes/`).
+* **🛡️ Smart Multi-Provider Failover**: Routes orders dynamically across priority wholesale APIs with automated retries and auto-refunds.
+* **📦 1,034 Pre-Configured Services**: Complete pre-loaded service catalog spanning Instagram, Facebook, TikTok, YouTube, Telegram, Twitter (X), and LinkedIn.
+* **🇧🇩 Local Bangladeshi + Global Payments**: Automated transaction tracking for **bKash**, **Nagad**, **Rocket**, and **Binance Pay (USDT TRC20/BEP20)**.
+* **🛠️ Tri-Language Official SDK Suite**: Zero-dependency clients for **PHP**, **Node.js**, and **Python**.
+* **🐳 Complete Production Suite**: Pre-configured `Dockerfile`, `docker-compose.yml`, `nginx.conf` (SSL/rate-limiting), and `ecosystem.config.js` (PM2 cluster).
+
+---
+
+## ⚡ Quick Start (in 60 Seconds)
+
+### Prerequisites
+* [Node.js](https://nodejs.org/) v18+ or v20+
+* Git
+
+### 1. Clone & Install
 ```bash
-cd /Users/user/Desktop/safollow
+git clone https://github.com/fsferdows/safollow-smm-panel.git
+cd safollow-smm-panel
 npm install
 ```
 
@@ -75,119 +80,137 @@ npm install
 ```bash
 npm start
 ```
-The server will start on port `3000` (or `process.env.PORT`):
-- **Website Homepage**: [http://localhost:3000](http://localhost:3000)
-- **User & Admin Dashboard**: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
-- **Services Catalog**: [http://localhost:3000/services](http://localhost:3000/services)
-- **Reseller API v2**: `http://localhost:3000/api/v2`
+The server will start listening at **`http://localhost:3001`**.
+
+### 3. Default Credentials
+| Portal | URL | Username | Password | Role |
+|---|---|---|---|---|
+| **Admin Panel** | `http://localhost:3001/dashboard` | `admin` | `admin123` | Full Superadmin |
+| **Demo User** | `http://localhost:3001/dashboard` | `demo` | `demo123` | Customer (Preloaded Balance) |
 
 ---
 
-## 🔑 Default Accounts
+## 🌐 Universal SMM Reseller API v2
 
-| Role | Username | Password | Initial Balance | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `admin123` | **$999.00** | Full access to Admin Tools, Settings, Order Approvals |
-| **Demo User** | `demo` | `demo123` | **$50.00** | Ready to place test orders, check API, submit deposits |
+The built-in API allows child panels, agencies, and scripts to place orders, check balances, and fetch live service lists.
+
+### Endpoints
+* `POST /api/v2`
+* `GET  /api/v2` (Query strings supported)
+
+### API Actions Reference
+
+| Action | Parameters | Description |
+|---|---|---|
+| `services` | `key` | Returns 1,034 services with IDs, rates, min/max limits, refill & cancel flags |
+| `balance` | `key` | Returns user account balance and currency (`USD`) |
+| `add` | `key`, `service`, `link`, `quantity` | Places single order, drip-feed (`runs`/`interval`), or custom comments |
+| `status` | `key`, `order` | Returns status, start count, remains, and charge for 1 order |
+| `status` | `key`, `orders=1,2,3` | Batch order status lookup for up to 100 orders |
+| `refill` | `key`, `order` or `orders` | Triggers automated 30-day refill |
+| `refill_status` | `key`, `refill` or `refills` | Queries live status of refill requests |
+| `cancel` | `key`, `orders=1,2,3` | Cancels pending orders and refunds wallet balance automatically |
 
 ---
 
-## 🧪 Automated Test Suite
+## 📦 Official Multi-Language SDK Suite
 
-Run the full end-to-end integration test suite verifying public endpoints, authentication, database seeding, standard SMM API v2, user order flow, and deposit approval:
-```bash
-npm test
+All official SDKs are located in the [`sdk/`](./sdk/) directory:
+
+### 1. PHP SDK ([`sdk/php/Api.php`](./sdk/php/Api.php) & [`sdk/php/Safollow.php`](./sdk/php/Safollow.php))
+Compatible with legacy PHP SMM scripts and modern PSR-4 applications:
+```php
+require_once 'sdk/php/Api.php';
+
+$api = new Api('YOUR_API_KEY', 'http://localhost:3001/api/v2');
+
+// Check Balance
+$balance = $api->balance();
+
+// Place Social Media Order
+$order = $api->order([
+    'service'  => 1925,
+    'link'     => 'https://www.instagram.com/fsferdows/',
+    'quantity' => 100
+]);
+
+// Track Status
+$status = $api->status($order->order);
 ```
-Or run individual tests:
-```bash
-node test.js
-node test_extra.js
+
+### 2. Node.js SDK ([`sdk/node/index.js`](./sdk/node/index.js))
+Zero external dependencies (uses native `fetch`):
+```javascript
+const SafollowClient = require('./sdk/node');
+
+const client = new SafollowClient('YOUR_API_KEY', 'http://localhost:3001/api/v2');
+
+async function run() {
+  const balance = await client.getBalance();
+  const order = await client.createOrder({
+    service: 1925,
+    link: 'https://www.instagram.com/fsferdows/',
+    quantity: 100
+  });
+  console.log(`Order Placed: #${order.order}`);
+}
+run();
 ```
 
----
-
-## 📡 SMM Reseller API Integration Example
-
-### Python Example
+### 3. Python SDK ([`sdk/python/safollow_smm.py`](./sdk/python/safollow_smm.py))
+Zero external dependencies (uses native `urllib`):
 ```python
-import requests
+from sdk.python.safollow_smm import SafollowClient
 
-API_URL = "http://localhost:3000/api/v2"
-API_KEY = "YOUR_API_KEY_HERE"
-
-# 1. Check User Balance
-res = requests.post(API_URL, data={"key": API_KEY, "action": "balance"}).json()
-print("Balance:", res["balance"])
-
-# 2. Add Order
-order = requests.post(API_URL, data={
-    "key": API_KEY,
-    "action": "add",
-    "service": 2374, # Facebook Post Like
-    "link": "https://facebook.com/example/posts/101",
-    "quantity": 1000
-}).json()
-print("Order ID:", order.get("order"))
-
-# 3. Check Order Status
-if "order" in order:
-    status = requests.post(API_URL, data={
-        "key": API_KEY,
-        "action": "status",
-        "order": order["order"]
-    }).json()
-    print("Status:", status["status"])
+client = SafollowClient("YOUR_API_KEY", "http://localhost:3001/api/v2")
+order = client.create_order(service=1925, link="https://www.instagram.com/fsferdows/", quantity=100)
+print(f"Order Created: #{order['order']}")
 ```
 
-### cURL Example
+---
+
+## 🐳 Production Deployment
+
+### Docker Compose
 ```bash
-# Get Services List
-curl -X POST http://localhost:3000/api/v2 \
-  -d "key=YOUR_API_KEY&action=services"
-
-# Check Balance
-curl -X POST http://localhost:3000/api/v2 \
-  -d "key=YOUR_API_KEY&action=balance"
-
-# Place an Order
-curl -X POST http://localhost:3000/api/v2 \
-  -d "key=YOUR_API_KEY&action=add&service=2374&link=https://fb.com/p/1&quantity=500"
+docker-compose up -d --build
 ```
+
+### PM2 Process Manager
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.js
+```
+
+### Nginx Reverse Proxy
+A sample production configuration with Gzip compression and SSL rate limiting is provided in [`nginx.conf`](./nginx.conf).
 
 ---
 
-## 📂 Project Structure
+## 👨‍💻 About the Developer
 
-```
-safollow/
-├── package.json               # Node.js dependencies and scripts
-├── server.js                  # Express application, routes, middleware
-├── database.js                # SQLite schema & automatic seeding
-├── config.js                  # Environment & default settings
-├── providerService.js         # Upstream provider API dispatcher
-├── safollow_services.json     # 1,034 authentic SAFollow services
-├── test.js                    # Automated integration test suite
-├── test_extra.js              # Additional ticket & mass-order test suite
-├── routes/
-│   ├── api_v2.js              # Standard SMM Reseller API v2
-│   ├── auth.js                # Authentication, register, login, profile
-│   ├── user.js                # Orders, mass orders, deposits, tickets
-│   └── admin.js               # Admin controls, order management, markups
-└── public/
-    ├── index.html             # High-converting Landing Page
-    ├── services.html          # Public Services Catalog Explorer
-    ├── api-docs.html          # Interactive API Documentation
-    ├── terms.html             # Terms of Service & Refund Policy
-    ├── faq.html               # Support FAQ & WhatsApp Chat Notice
-    ├── dashboard.html         # Unified User & Admin Dashboard
-    ├── css/
-    │   └── style.css          # Theme styles, CSS variables, dark/light
-    └── js/
-        ├── app.js             # Public scripts, calculator, theme, auth modal
-        └── dashboard.js       # Dashboard SPA controller logic
-```
+<div align="center">
+
+### **FS Ferdows**
+*Software Engineer • Full-Stack Developer • Founder at LateBright*
+
+📍 **Dhaka, Bangladesh 🇧🇩**
+
+[![GitHub](https://img.shields.io/badge/GitHub-@fsferdows-181717?style=for-the-badge&logo=github)](https://github.com/fsferdows)
+[![YouTube](https://img.shields.io/badge/YouTube-FS%20Ferdows%20Official-FF0000?style=for-the-badge&logo=youtube)](https://youtube.com/@fsferdowsyt?si=03HdUXfd3jfuD0AZ)
+[![Instagram](https://img.shields.io/badge/Instagram-@fsferdows-E4405F?style=for-the-badge&logo=instagram)](https://www.instagram.com/fsferdows/)
+[![Email](https://img.shields.io/badge/Email-ferdowsurrahman1@gmail.com-D14836?style=for-the-badge&logo=gmail)](mailto:ferdowsurrahman1@gmail.com)
+
+</div>
 
 ---
 
-## 🛡️ License
-ISC License. Built for scalable SMM reseller panel operations.
+## 📄 License
+
+This project is open-source software licensed under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+  <sub>⭐ If you find this project useful, give it a star on GitHub! It helps more developers discover open-source tools.</sub>
+</div>
