@@ -549,4 +549,79 @@ router.post('/settings', (req, res) => {
   }
 });
 
+// ==========================================
+// BOT ACCOUNT FARM (Direct Internal Engine)
+// ==========================================
+const { getAccountStats, importAccounts } = require('../engine/accountManager');
+const { testAccountSession } = require('../engine/instagramEngine');
+
+router.get('/bot-accounts', (req, res) => {
+  try {
+    const { platform = 'instagram' } = req.query;
+    const accounts = db.prepare('SELECT id, platform, username, status, total_followed, last_used_at, notes, created_at, proxy FROM bot_accounts WHERE platform = ? ORDER BY id DESC').all(platform);
+    const stats = getAccountStats();
+    res.json({ accounts, stats });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch bot accounts' });
+  }
+});
+
+router.post('/bot-accounts/import', (req, res) => {
+  const { text, platform = 'instagram' } = req.body;
+  if (!text) return res.status(400).json({ error: 'Account text input is required' });
+
+  try {
+    const result = importAccounts(text, platform);
+    res.json({
+      success: true,
+      message: `Imported ${result.added} accounts (${result.skipped} skipped)`,
+      result
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to import accounts' });
+  }
+});
+
+router.post('/bot-accounts', (req, res) => {
+  const { username, session_id, password, proxy, platform = 'instagram', ds_user_id, csrftoken } = req.body;
+  if (!username || !session_id) {
+    return res.status(400).json({ error: 'Username and Session ID are required' });
+  }
+
+  try {
+    const resId = db.prepare(`
+      INSERT OR REPLACE INTO bot_accounts 
+      (platform, username, password, session_id, csrftoken, ds_user_id, proxy, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+    `).run(platform, username.trim(), password || '', session_id.trim(), csrftoken || '', ds_user_id || '', proxy || '');
+
+    res.json({ success: true, message: `Account @${username} added to farm`, id: resId.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add bot account' });
+  }
+});
+
+router.post('/bot-accounts/:id/test', async (req, res) => {
+  const account = db.prepare('SELECT * FROM bot_accounts WHERE id = ?').get(req.params.id);
+  if (!account) return res.status(404).json({ error: 'Account not found' });
+
+  const result = await testAccountSession(account);
+  if (result.valid) {
+    db.prepare("UPDATE bot_accounts SET status = 'active', notes = NULL WHERE id = ?").run(account.id);
+  } else {
+    db.prepare("UPDATE bot_accounts SET status = 'challenge', notes = ? WHERE id = ?").run(result.error || 'Challenge or expired', account.id);
+  }
+
+  res.json(result);
+});
+
+router.delete('/bot-accounts/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM bot_accounts WHERE id = ?').run(req.params.id);
+    res.json({ success: true, message: 'Account removed from farm' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 module.exports = router;

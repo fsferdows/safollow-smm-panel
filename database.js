@@ -115,6 +115,22 @@ function initDb() {
       currency TEXT DEFAULT 'USD'
     );
 
+    CREATE TABLE IF NOT EXISTS bot_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      platform TEXT DEFAULT 'instagram',
+      username TEXT UNIQUE NOT NULL,
+      password TEXT,
+      session_id TEXT,
+      csrftoken TEXT,
+      ds_user_id TEXT,
+      proxy TEXT,
+      status TEXT DEFAULT 'active',
+      total_followed INTEGER DEFAULT 0,
+      last_used_at DATETIME,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL

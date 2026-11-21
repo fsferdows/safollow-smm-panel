@@ -134,6 +134,9 @@ function handleViewActivation(viewName) {
     case 'admin-providers':
       loadAdminProviders();
       break;
+    case 'admin-botfarm':
+      loadAdminBotFarm();
+      break;
     case 'admin-settings':
       loadAdminSettings();
       break;
@@ -1688,4 +1691,185 @@ function initThemeToggle() {
 
 function updateThemeIcon(btn) {
   btn.innerHTML = currentTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+}
+
+// =============================================================
+// BOT ACCOUNT FARM (Direct Internal Delivery Engine)
+// =============================================================
+
+async function loadAdminBotFarm() {
+  const tbody = document.getElementById('botAccountsTableBody');
+  try {
+    const res = await fetch('/admin/bot-accounts');
+    const data = await res.json();
+    const { accounts, stats } = data;
+
+    // Update stats widgets
+    document.getElementById('farmTotalAccounts').textContent = (stats.total || 0).toLocaleString();
+    document.getElementById('farmActiveAccounts').textContent = (stats.active || 0).toLocaleString();
+    document.getElementById('farmChallengeAccounts').textContent = (stats.challenge || 0).toLocaleString();
+    document.getElementById('farmTotalDelivered').textContent = (stats.total_delivered || 0).toLocaleString();
+
+    if (!accounts || accounts.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center; padding:30px;">
+            <p style="color:var(--text-muted); margin-bottom:12px;">No bot accounts in farm yet.</p>
+            <button class="btn btn-primary btn-sm" onclick="openAddBotAccountModal()">
+              <i class="fas fa-plus"></i> Add Your First Bot Account
+            </button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    let html = '';
+    accounts.forEach(a => {
+      const statusClass = a.status === 'active' ? 'status-Completed' : (a.status === 'challenge' ? 'status-Pending' : 'status-Canceled');
+      const lastUsed = a.last_used_at ? new Date(a.last_used_at).toLocaleString() : 'Never';
+
+      html += `
+        <tr>
+          <td><strong>#${a.id}</strong></td>
+          <td>
+            <strong>@${a.username}</strong>
+            ${a.notes ? `<div style="font-size:0.75rem; color:var(--danger);">${a.notes}</div>` : ''}
+          </td>
+          <td><span style="font-size:0.8rem; text-transform:uppercase; font-weight:600;"><i class="fab fa-instagram text-danger"></i> ${a.platform}</span></td>
+          <td><span class="status-badge ${statusClass}">${a.status}</span></td>
+          <td><strong>${a.total_followed.toLocaleString()}</strong></td>
+          <td style="font-size:0.8rem; color:var(--text-muted);">${lastUsed}</td>
+          <td style="font-size:0.8rem;">${a.proxy ? `<code>${a.proxy}</code>` : '<span style="color:var(--text-muted);">Direct</span>'}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-outline btn-sm" onclick="testBotAccount(${a.id})" title="Verify Session">
+                <i class="fas fa-vial"></i> Test
+              </button>
+              <button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="deleteBotAccount(${a.id})" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--danger);">Failed to load bot farm</td></tr>';
+  }
+}
+
+function openAddBotAccountModal() {
+  document.getElementById('botUsername').value = '';
+  document.getElementById('botSessionId').value = '';
+  document.getElementById('botPassword').value = '';
+  document.getElementById('botProxy').value = '';
+  document.getElementById('botAccountModal').classList.add('active');
+}
+
+function closeBotAccountModal() {
+  document.getElementById('botAccountModal').classList.remove('active');
+}
+
+async function saveSingleBotAccount(e) {
+  e.preventDefault();
+  const username = document.getElementById('botUsername').value.trim();
+  const session_id = document.getElementById('botSessionId').value.trim();
+  const password = document.getElementById('botPassword').value.trim();
+  const proxy = document.getElementById('botProxy').value.trim();
+
+  try {
+    const res = await fetch('/admin/bot-accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, session_id, password, proxy, platform: 'instagram' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to add account');
+
+    alert(`Account @${username} added to bot farm!`);
+    closeBotAccountModal();
+    loadAdminBotFarm();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+}
+
+function openBulkImportModal() {
+  document.getElementById('bulkAccountsInput').value = '';
+  document.getElementById('bulkImportResult').style.display = 'none';
+  document.getElementById('bulkBotModal').classList.add('active');
+}
+
+function closeBulkBotModal() {
+  document.getElementById('bulkBotModal').classList.remove('active');
+}
+
+async function submitBulkAccounts(e) {
+  e.preventDefault();
+  const text = document.getElementById('bulkAccountsInput').value.trim();
+  const resDiv = document.getElementById('bulkImportResult');
+
+  resDiv.style.display = 'block';
+  resDiv.style.background = '#eff6ff';
+  resDiv.style.color = '#1e40af';
+  resDiv.textContent = 'Parsing and importing accounts...';
+
+  try {
+    const res = await fetch('/admin/bot-accounts/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, platform: 'instagram' })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      resDiv.style.background = '#dcfce7';
+      resDiv.style.color = '#166534';
+      resDiv.innerHTML = `<strong>✅ Success!</strong> ${data.message}`;
+      setTimeout(() => {
+        closeBulkBotModal();
+        loadAdminBotFarm();
+      }, 1500);
+    } else {
+      resDiv.style.background = '#fee2e2';
+      resDiv.style.color = '#991b1b';
+      resDiv.textContent = data.error || 'Import failed';
+    }
+  } catch (err) {
+    resDiv.style.background = '#fee2e2';
+    resDiv.style.color = '#991b1b';
+    resDiv.textContent = `Import error: ${err.message}`;
+  }
+}
+
+async function testBotAccount(id) {
+  try {
+    const res = await fetch(`/admin/bot-accounts/${id}/test`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.valid) {
+      alert(`✅ Account @${data.username} is valid and active! (Followers: ${data.follower_count.toLocaleString()})`);
+    } else {
+      alert(`⚠️ Account test: ${data.error || 'Session expired or checkpoint challenge'}`);
+    }
+    loadAdminBotFarm();
+  } catch (err) {
+    alert('Test connection failed');
+  }
+}
+
+async function deleteBotAccount(id) {
+  if (!confirm(`Remove account #${id} from bot farm?`)) return;
+
+  try {
+    const res = await fetch(`/admin/bot-accounts/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    alert(data.message || 'Account removed');
+    loadAdminBotFarm();
+  } catch (err) {
+    alert('Failed to delete account');
+  }
 }

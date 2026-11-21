@@ -160,6 +160,9 @@
         <a class="sidebar-link" data-view="admin-providers">
           <i class="fas fa-server"></i> Upstream Providers
         </a>
+        <a class="sidebar-link" data-view="admin-botfarm">
+          <i class="fas fa-robot text-primary"></i> Bot Account Farm
+        </a>
         <a class="sidebar-link" data-view="admin-settings">
           <i class="fas fa-sliders-h"></i> System Settings
         </a>
@@ -714,6 +717,66 @@
         </div>
       </section>
 
+      <!-- Admin Bot Account Farm (Direct Engine) -->
+      <section id="view-admin-botfarm" class="dash-view" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 4px;">
+              <i class="fas fa-robot text-primary"></i> Direct Bot Farm Engine
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Fulfill Instagram orders directly using your own pool of bot accounts without paying third-party APIs.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="openBulkImportModal()">
+              <i class="fas fa-file-import"></i> Bulk Import
+            </button>
+            <button class="btn btn-primary" onclick="openAddBotAccountModal()">
+              <i class="fas fa-plus"></i> Add Account
+            </button>
+          </div>
+        </div>
+
+        <!-- Farm Stats -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="stat-card">
+            <span class="stat-label">Total Farm Accounts</span>
+            <div class="stat-value" id="farmTotalAccounts">0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Active & Ready</span>
+            <div class="stat-value" style="color: var(--success);" id="farmActiveAccounts">0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Verification Challenge</span>
+            <div class="stat-value" style="color: var(--warning);" id="farmChallengeAccounts">0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Direct Follows Delivered</span>
+            <div class="stat-value" style="color: var(--primary);" id="farmTotalDelivered">0</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="smm-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Follows Sent</th>
+                <th>Last Used</th>
+                <th>Proxy</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="botAccountsTableBody">
+              <tr><td colspan="8" style="text-align: center; padding: 30px;">Loading bot farm accounts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Admin Settings -->
       <section id="view-admin-settings" class="dash-view" style="display: none;">
         <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 20px;">System & Payment Settings</h2>
@@ -927,6 +990,81 @@
       <div style="margin-top: 22px; text-align: right;">
         <button class="btn btn-outline" onclick="closeOrderDetailsModal()">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Add Single Bot Account Modal -->
+  <div class="modal-overlay" id="botAccountModal">
+    <div class="modal-box" style="max-width: 550px;">
+      <button class="modal-close" onclick="closeBotAccountModal()">&times;</button>
+      <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 6px;">
+        <i class="fas fa-robot text-primary"></i> Add Bot Account to Farm
+      </h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 18px;">
+        Add an Instagram account with an authenticated session to fulfill follower and like orders directly.
+      </p>
+
+      <form onsubmit="saveSingleBotAccount(event)">
+        <div class="form-group">
+          <label class="form-label">Instagram Username</label>
+          <input type="text" class="form-control" id="botUsername" placeholder="e.g. my_farm_bot1" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Session ID (sessionid Cookie)</label>
+          <input type="text" class="form-control" id="botSessionId" placeholder="Paste sessionid cookie from browser (e.g. 5839201%3A...)" required>
+          <small style="color: var(--text-muted); font-size: 0.78rem;">Open instagram.com -> Press F12 -> Application -> Cookies -> Copy <code>sessionid</code>.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password (Optional)</label>
+          <input type="password" class="form-control" id="botPassword" placeholder="For automated re-login">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Proxy (Optional)</label>
+          <input type="text" class="form-control" id="botProxy" placeholder="http://user:pass@ip:port">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
+          <i class="fas fa-plus-circle"></i> Add Account to Pool
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk Import Bot Accounts Modal -->
+  <div class="modal-overlay" id="bulkBotModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <button class="modal-close" onclick="closeBulkBotModal()">&times;</button>
+      <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 6px;">
+        <i class="fas fa-file-import text-primary"></i> Bulk Import Bot Accounts
+      </h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px;">
+        Import multiple accounts at once. One account per line.
+      </p>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.8rem; color: var(--text-muted);">
+        <strong>Supported Formats:</strong><br>
+        <code>username:sessionid</code><br>
+        <code>username:password:sessionid</code><br>
+        <code>username:password:sessionid:proxy</code><br>
+        Or raw cookie strings (containing <code>sessionid=...; ds_user_id=...</code>)
+      </div>
+
+      <form onsubmit="submitBulkAccounts(event)">
+        <div class="form-group">
+          <textarea class="form-control" id="bulkAccountsInput" rows="7" placeholder="bot_user1:5849203%3Akfj29...
+bot_user2:password123:6839201%3Adla82...
+sessionid=948201...; ds_user_id=149204..." required></textarea>
+        </div>
+
+        <div id="bulkImportResult" style="display: none; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 0.85rem;"></div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fas fa-upload"></i> Import Accounts
+        </button>
+      </form>
     </div>
   </div>
 
