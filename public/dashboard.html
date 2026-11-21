@@ -169,6 +169,17 @@
     <!-- Main Content Area -->
     <main class="dashboard-content">
 
+      <!-- Simulation / Live Mode Notice Banner -->
+      <div id="simulationNoticeBanner" style="display: none; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 0.88rem; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+        <div>
+          <strong>ℹ️ Mode: Local Standalone Simulation</strong><br>
+          <span style="font-size: 0.82rem; color: #78350f;">No Upstream Provider API is connected. Orders update locally in your database for testing, but <strong>will not deliver real followers to live social media accounts</strong>.</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="switchView('admin-providers')">
+          <i class="fas fa-plug"></i> Connect Provider API for Real Delivery
+        </button>
+      </div>
+
       <!-- View: New Order -->
       <section id="view-new-order" class="dash-view">
         <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 6px;">Create New Order</h2>

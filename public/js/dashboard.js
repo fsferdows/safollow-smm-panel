@@ -156,6 +156,17 @@ async function loadInitialData() {
     userCategories = await catRes.json();
     userServices = await svcRes.json();
 
+    if (currentUser.role === 'admin') {
+      try {
+        const provRes = await fetch('/admin/providers');
+        const provs = await provRes.json();
+        const banner = document.getElementById('simulationNoticeBanner');
+        if (banner) {
+          banner.style.display = (!provs || provs.length === 0) ? 'flex' : 'none';
+        }
+      } catch (e) {}
+    }
+
     populateNewOrderCategories();
   } catch (err) {
     console.error('Initial data load error:', err);
@@ -426,6 +437,10 @@ async function loadUserOrders(silent = false) {
       const statusClass = `status-${o.status.replace(/\s+/g, '')}`;
       const canRefill = (o.status === 'Completed' || o.status === 'Partial') && o.refill_status !== 'Requested';
 
+      const modeBadge = o.provider_id 
+        ? '<div style="font-size: 0.72rem; color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Live Provider Dispatch</div>'
+        : '<div style="font-size: 0.72rem; color: #d97706; font-weight: 600;"><i class="fas fa-flask"></i> Local Simulation (No Provider API)</div>';
+
       html += `
         <tr>
           <td><strong>${o.id}</strong></td>
@@ -434,6 +449,7 @@ async function loadUserOrders(silent = false) {
             <div style="font-weight: 600; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.service_name}">
               ${o.service_name}
             </div>
+            ${modeBadge}
           </td>
           <td>
             <a href="${o.link}" target="_blank" style="color:var(--primary); text-decoration:none; font-size:0.85rem;" title="${o.link}">
@@ -1212,9 +1228,14 @@ async function loadAdminProviders() {
           <td><strong>$ ${p.balance.toFixed(2)} ${p.currency}</strong></td>
           <td><span class="status-badge status-Completed">${p.status}</span></td>
           <td>
-            <button class="btn btn-outline btn-sm" onclick="testProviderConnection(${p.id})">
-              <i class="fas fa-plug"></i> Test Balance
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-outline btn-sm" onclick="testProviderConnection(${p.id})">
+                <i class="fas fa-plug"></i> Test Balance
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="bindAllServicesToProvider(${p.id})">
+                <i class="fas fa-link"></i> Link All 1,034 Services
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -1237,6 +1258,18 @@ async function testProviderConnection(providerId) {
     }
   } catch (e) {
     alert('Connection test failed');
+  }
+}
+
+async function bindAllServicesToProvider(providerId) {
+  if (!confirm('Link all 1,034 services to this provider? Orders placed on your panel will automatically be forwarded to this provider API!')) return;
+  try {
+    const res = await fetch(`/admin/providers/${providerId}/bind-all`, { method: 'POST' });
+    const data = await res.json();
+    alert(data.message || 'Services linked successfully!');
+    loadAdminProviders();
+  } catch (e) {
+    alert('Failed to link services');
   }
 }
 

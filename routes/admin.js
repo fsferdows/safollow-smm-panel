@@ -411,6 +411,19 @@ router.post('/providers/:id/test', async (req, res) => {
   }
 });
 
+// Bind all services to a provider for live order dispatch
+router.post('/providers/:id/bind-all', (req, res) => {
+  const provider = db.prepare('SELECT * FROM providers WHERE id = ?').get(req.params.id);
+  if (!provider) return res.status(404).json({ error: 'Provider not found' });
+
+  try {
+    db.prepare('UPDATE services SET provider_id = ?, provider_service_id = id').run(provider.id);
+    res.json({ success: true, message: `Linked all 1,034 services to provider "${provider.name}". Real orders will now be forwarded to their API!` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to bind services to provider' });
+  }
+});
+
 // System Settings
 router.get('/settings', (req, res) => {
   try {
