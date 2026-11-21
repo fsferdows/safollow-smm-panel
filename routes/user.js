@@ -118,6 +118,14 @@ router.post('/orders/new', (req, res) => {
   }
 
   try {
+    let assignedProviderId = s.provider_id;
+    let assignedProvSvcId = s.provider_service_id || s.id;
+
+    if (!assignedProviderId) {
+      const defProv = db.prepare("SELECT id FROM providers WHERE status = 'active' AND length(api_key) > 5 ORDER BY id ASC LIMIT 1").get();
+      if (defProv) assignedProviderId = defProv.id;
+    }
+
     const placeTx = db.transaction(() => {
       db.prepare('UPDATE users SET balance = balance - ?, spent = spent + ? WHERE id = ?')
         .run(charge, charge, user.id);
@@ -126,7 +134,7 @@ router.post('/orders/new', (req, res) => {
         INSERT INTO orders 
         (user_id, service_id, service_name, category_name, link, quantity, charge, remains, status, provider_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
-      `).run(user.id, s.id, s.name, s.category_name, link.trim(), qty, charge, qty, s.provider_id);
+      `).run(user.id, s.id, s.name, s.category_name, link.trim(), qty, charge, qty, assignedProviderId);
 
       return res.lastInsertRowid;
     });
@@ -134,8 +142,8 @@ router.post('/orders/new', (req, res) => {
     const orderId = placeTx();
 
     // Async forward if linked to provider
-    if (s.provider_id && s.provider_service_id) {
-      forwardOrder(orderId, s.provider_id, s.provider_service_id, link.trim(), qty).catch(err => {
+    if (assignedProviderId) {
+      forwardOrder(orderId, assignedProviderId, assignedProvSvcId, link.trim(), qty).catch(err => {
         console.error('Async provider forward error:', err);
       });
     }
@@ -234,20 +242,25 @@ router.post('/orders/mass', (req, res) => {
 router.get('/orders', (req, res) => {
   try {
     const { status, search, limit = 50, offset = 0 } = req.query;
-    let query = 'SELECT * FROM orders WHERE user_id = ?';
+    let query = `
+      SELECT o.*, p.name as provider_name 
+      FROM orders o 
+      LEFT JOIN providers p ON p.id = o.provider_id 
+      WHERE o.user_id = ?
+    `;
     const params = [req.user.id];
 
     if (status && status !== 'all') {
-      query += ' AND LOWER(status) = LOWER(?)';
+      query += ' AND LOWER(o.status) = LOWER(?)';
       params.push(status);
     }
 
     if (search) {
-      query += ' AND (id LIKE ? OR service_name LIKE ? OR link LIKE ?)';
+      query += ' AND (o.id LIKE ? OR o.service_name LIKE ? OR o.link LIKE ?)';
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY o.id DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
     const orders = db.prepare(query).all(...params);

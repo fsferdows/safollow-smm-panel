@@ -170,13 +170,13 @@
     <main class="dashboard-content">
 
       <!-- Simulation / Live Mode Notice Banner -->
-      <div id="simulationNoticeBanner" style="display: none; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 0.88rem; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+      <div id="simulationNoticeBanner" style="display: flex; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 0.88rem; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
         <div>
-          <strong>ℹ️ Mode: Local Standalone Simulation</strong><br>
-          <span style="font-size: 0.82rem; color: #78350f;">No Upstream Provider API is connected. Orders update locally in your database for testing, but <strong>will not deliver real followers to live social media accounts</strong>.</span>
+          <strong id="bannerNoticeTitle">⚠️ Real Delivery Setup: Connect Upstream Provider API</strong><br>
+          <span id="bannerNoticeText" style="font-size: 0.82rem; color: #78350f;">Your panel is currently waiting for an Upstream Provider API Key. Connect your SAFollow API Key to deliver real followers directly to Instagram!</span>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="switchView('admin-providers')">
-          <i class="fas fa-plug"></i> Connect Provider API for Real Delivery
+        <button class="btn btn-primary btn-sm" onclick="switchView('admin-providers'); openProviderModalForSafollow();">
+          <i class="fas fa-key"></i> Enter SAFollow API Key
         </button>
       </div>
 
@@ -670,14 +670,28 @@
 
       <!-- Admin Providers -->
       <section id="view-admin-providers" class="dash-view" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
           <div>
             <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 4px;">Upstream SMM Providers</h2>
-            <p style="color: var(--text-muted); font-size: 0.88rem;">Connect upstream API panels (e.g. SAFollow, JAP, Peakerr) to auto-forward orders.</p>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Connect upstream API panels (e.g. SAFollow, JAP, Peakerr) to automatically dispatch real orders to live social media platforms.</p>
           </div>
-          <button class="btn btn-primary" onclick="openAddProviderModal()">
-            <i class="fas fa-plus"></i> Add Provider
-          </button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="openAddProviderModal()">
+              <i class="fas fa-plus"></i> Add Provider
+            </button>
+          </div>
+        </div>
+
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <strong>Fulfillment Mode:</strong>
+            <span id="fulfillmentModeLabel" style="margin-left: 8px; font-weight: 600; color: var(--primary);">Live Provider Only</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">In Live mode, orders are forwarded to your upstream provider API. If no provider is connected, orders will wait in Pending status.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btnModeLive" class="btn btn-sm btn-primary" onclick="setFulfillmentMode('live')">Live Provider (Production)</button>
+            <button id="btnModeSim" class="btn btn-sm btn-outline" onclick="setFulfillmentMode('simulation')">Sandbox Simulation</button>
+          </div>
         </div>
 
         <div class="table-container">
@@ -687,13 +701,14 @@
                 <th>ID</th>
                 <th>Provider Name</th>
                 <th>API URL</th>
-                <th>Balance</th>
+                <th>Wholesale Balance</th>
+                <th>Linked Services</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admProvidersTableBody">
-              <tr><td colspan="6" style="text-align: center; padding: 30px;">Loading providers...</td></tr>
+              <tr><td colspan="7" style="text-align: center; padding: 30px;">Loading providers...</td></tr>
             </tbody>
           </table>
         </div>
@@ -799,6 +814,116 @@
         </div>
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Submit Ticket</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Provider Modal -->
+  <div class="modal-overlay" id="providerModal">
+    <div class="modal-box" style="max-width: 620px;">
+      <button class="modal-close" onclick="closeProviderModal()">&times;</button>
+      <h3 id="providerModalTitle" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 6px;">Configure Upstream Provider</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 18px;">
+        Connect an SMM wholesale provider to automatically fulfill real social media orders (Instagram, Facebook, YouTube, TikTok).
+      </p>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
+        <label style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 8px;">Quick Presets:</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="applyProviderPreset('safollow')">
+            <i class="fas fa-bolt text-primary"></i> SAFollow (Official API)
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="applyProviderPreset('jap')">
+            <i class="fas fa-server"></i> JustAnotherPanel
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="applyProviderPreset('peakerr')">
+            <i class="fas fa-fire"></i> Peakerr
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="applyProviderPreset('custom')">
+            <i class="fas fa-code"></i> Custom API
+          </button>
+        </div>
+      </div>
+
+      <form onsubmit="saveProviderForm(event)">
+        <input type="hidden" id="providerFormId" value="">
+
+        <div class="form-group">
+          <label class="form-label">Provider Name</label>
+          <input type="text" class="form-control" id="providerFormName" placeholder="e.g. SAFollow Official API" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API v2 URL</label>
+          <input type="url" class="form-control" id="providerFormUrl" placeholder="https://www.safollow.com/api/v2" required>
+          <small style="color: var(--text-muted); font-size: 0.78rem;">Standard SMM API v2 endpoint.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Provider API Key</label>
+          <input type="text" class="form-control" id="providerFormKey" placeholder="Paste your secret API key from provider account (e.g. 4d82f7...)" required>
+          <div style="background: #eff6ff; border-left: 3px solid #3b82f6; padding: 10px 14px; margin-top: 8px; font-size: 0.82rem; color: #1e40af; border-radius: 4px; line-height: 1.5;">
+            <strong>📌 How to get your SAFollow API Key:</strong><br>
+            1. Open <a href="https://www.safollow.com" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">safollow.com</a> in a new tab.<br>
+            2. Log in and go to your <strong>Account / Profile</strong> page.<br>
+            3. Copy your <strong>API Key</strong> (secret key string).<br>
+            4. Ensure your SAFollow account has balance (e.g. ৳50 or $1 via bKash/Nagad/Binance).
+          </div>
+        </div>
+
+        <div id="providerTestResult" style="display: none; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 0.85rem;"></div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-outline" style="flex: 1;" onclick="testCurrentFormKey()">
+            <i class="fas fa-vial"></i> Test API Key & Balance
+          </button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            <i class="fas fa-save"></i> Save Provider & Link Services
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="orderDetailsModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <button class="modal-close" onclick="closeOrderDetailsModal()">&times;</button>
+      <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 6px;">Order Details #<span id="dtlOrderId"></span></h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;" id="dtlOrderDate"></p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Service:</span>
+          <span id="dtlOrderService" style="font-weight: 600; text-align: right; max-width: 350px;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Target Link:</span>
+          <a id="dtlOrderLink" href="#" target="_blank" style="color: var(--primary); text-decoration: underline; max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></a>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Quantity / Charge:</span>
+          <span><strong id="dtlOrderQty"></strong> / <strong id="dtlOrderCharge" style="color: var(--primary);"></strong></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Status / Remains:</span>
+          <span><span id="dtlOrderStatusBadge" class="status-badge"></span> (Remains: <span id="dtlOrderRemains"></span>)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Start Count:</span>
+          <span id="dtlOrderStartCount" style="font-weight: 600;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <span style="color: var(--text-muted);">Fulfillment Engine:</span>
+          <span id="dtlOrderEngine" style="font-weight: 600;"></span>
+        </div>
+        <div id="dtlOrderErrorRow" style="display: none; background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem;">
+          <strong>Diagnostics / Notice:</strong> <span id="dtlOrderError"></span>
+        </div>
+      </div>
+
+      <div style="margin-top: 22px; text-align: right;">
+        <button class="btn btn-outline" onclick="closeOrderDetailsModal()">Close</button>
+      </div>
     </div>
   </div>
 

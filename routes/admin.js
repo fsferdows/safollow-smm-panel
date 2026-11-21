@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { requireAdmin } = require('./auth');
-const { callProviderApi } = require('../providerService');
+const { callProviderApi, cleanUrl } = require('../providerService');
 
 // Protect all admin endpoints
 router.use(requireAdmin);
@@ -371,7 +371,12 @@ router.patch('/tickets/:id/status', (req, res) => {
 // Providers Management
 router.get('/providers', (req, res) => {
   try {
-    const providers = db.prepare('SELECT * FROM providers ORDER BY id').all();
+    const providers = db.prepare(`
+      SELECT p.*, 
+        (SELECT count(*) FROM services s WHERE s.provider_id = p.id) as linked_services
+      FROM providers p 
+      ORDER BY p.id
+    `).all();
     res.json(providers);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch providers' });
@@ -379,17 +384,57 @@ router.get('/providers', (req, res) => {
 });
 
 router.post('/providers', (req, res) => {
-  const { name, api_url, api_key } = req.body;
-  if (!name || !api_url || !api_key) {
-    return res.status(400).json({ error: 'Name, API URL and API Key are required' });
+  let { name, api_url, api_key } = req.body;
+  if (!name || !api_url) {
+    return res.status(400).json({ error: 'Name and API URL are required' });
   }
+
+  api_url = cleanUrl(api_url);
+  api_key = (api_key || '').trim();
 
   try {
     const resId = db.prepare('INSERT INTO providers (name, api_url, api_key) VALUES (?, ?, ?)')
-      .run(name, api_url.trim(), api_key.trim());
-    res.json({ success: true, message: 'Provider added', id: resId.lastInsertRowid });
+      .run(name.trim(), api_url, api_key);
+    res.json({ success: true, message: 'Provider added successfully', id: resId.lastInsertRowid });
   } catch (err) {
     res.status(500).json({ error: 'Failed to add provider' });
+  }
+});
+
+router.put('/providers/:id', (req, res) => {
+  let { name, api_url, api_key, status } = req.body;
+  const providerId = req.params.id;
+
+  const provider = db.prepare('SELECT * FROM providers WHERE id = ?').get(providerId);
+  if (!provider) return res.status(404).json({ error: 'Provider not found' });
+
+  const updates = [];
+  const params = [];
+
+  if (name) { updates.push('name = ?'); params.push(name.trim()); }
+  if (api_url) { updates.push('api_url = ?'); params.push(cleanUrl(api_url)); }
+  if (api_key !== undefined) { updates.push('api_key = ?'); params.push(api_key.trim()); }
+  if (status) { updates.push('status = ?'); params.push(status); }
+
+  if (updates.length === 0) return res.json({ success: true, message: 'No changes made' });
+
+  params.push(providerId);
+  try {
+    db.prepare(`UPDATE providers SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+    res.json({ success: true, message: 'Provider updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update provider' });
+  }
+});
+
+router.delete('/providers/:id', (req, res) => {
+  const providerId = req.params.id;
+  try {
+    db.prepare('UPDATE services SET provider_id = NULL, provider_service_id = NULL WHERE provider_id = ?').run(providerId);
+    db.prepare('DELETE FROM providers WHERE id = ?').run(providerId);
+    res.json({ success: true, message: 'Provider deleted and services unlinked' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete provider' });
   }
 });
 
@@ -397,17 +442,27 @@ router.post('/providers/:id/test', async (req, res) => {
   const provider = db.prepare('SELECT * FROM providers WHERE id = ?').get(req.params.id);
   if (!provider) return res.status(404).json({ error: 'Provider not found' });
 
+  if (!provider.api_key || provider.api_key.trim().length < 5) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'API key is missing or empty. Please enter your API key from your provider account (e.g. safollow.com/account).' 
+    });
+  }
+
   const result = await callProviderApi(provider.api_url, {
-    key: provider.api_key,
+    key: provider.api_key.trim(),
     action: 'balance'
   });
 
   if (result && result.balance !== undefined) {
+    const balance = parseFloat(result.balance) || 0;
+    const currency = result.currency || 'USD';
     db.prepare('UPDATE providers SET balance = ?, currency = ? WHERE id = ?')
-      .run(parseFloat(result.balance) || 0, result.currency || 'USD', provider.id);
-    res.json({ success: true, balance: result.balance, currency: result.currency || 'USD' });
+      .run(balance, currency, provider.id);
+    res.json({ success: true, balance, currency });
   } else {
-    res.status(400).json({ success: false, error: result.error || 'Connection failed' });
+    const err = (result && result.error) ? result.error : 'Connection failed. Check API URL and Key.';
+    res.status(400).json({ success: false, error: err });
   }
 });
 
@@ -418,9 +473,51 @@ router.post('/providers/:id/bind-all', (req, res) => {
 
   try {
     db.prepare('UPDATE services SET provider_id = ?, provider_service_id = id').run(provider.id);
-    res.json({ success: true, message: `Linked all 1,034 services to provider "${provider.name}". Real orders will now be forwarded to their API!` });
+    res.json({ 
+      success: true, 
+      message: `Successfully linked all 1,034 services to "${provider.name}"! Real orders will now be forwarded to their API.` 
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to bind services to provider' });
+  }
+});
+
+// Fulfillment status check
+router.get('/fulfillment-status', (req, res) => {
+  try {
+    const modeSetting = db.prepare("SELECT value FROM settings WHERE key = 'fulfillment_mode'").get();
+    const providers = db.prepare(`
+      SELECT p.id, p.name, p.api_url, p.balance, p.currency, p.status,
+        (SELECT count(*) FROM services s WHERE s.provider_id = p.id) as linked_services,
+        (CASE WHEN length(p.api_key) > 5 THEN 1 ELSE 0 END) as has_key
+      FROM providers p
+    `).all();
+
+    const totalServices = db.prepare('SELECT count(*) as c FROM services').get().c;
+    const linkedServices = db.prepare('SELECT count(*) as c FROM services WHERE provider_id IS NOT NULL').get().c;
+
+    res.json({
+      fulfillment_mode: modeSetting ? modeSetting.value : 'live',
+      providers,
+      total_services: totalServices,
+      linked_services: linkedServices
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to check fulfillment status' });
+  }
+});
+
+router.post('/fulfillment-mode', (req, res) => {
+  const { mode } = req.body;
+  if (!['live', 'simulation'].includes(mode)) {
+    return res.status(400).json({ error: 'Invalid mode. Must be "live" or "simulation"' });
+  }
+
+  try {
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('fulfillment_mode', ?)").run(mode);
+    res.json({ success: true, message: `Fulfillment mode set to ${mode}` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update fulfillment mode' });
   }
 });
 

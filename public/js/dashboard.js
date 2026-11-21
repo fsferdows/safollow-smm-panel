@@ -158,12 +158,9 @@ async function loadInitialData() {
 
     if (currentUser.role === 'admin') {
       try {
-        const provRes = await fetch('/admin/providers');
-        const provs = await provRes.json();
-        const banner = document.getElementById('simulationNoticeBanner');
-        if (banner) {
-          banner.style.display = (!provs || provs.length === 0) ? 'flex' : 'none';
-        }
+        const statusRes = await fetch('/admin/fulfillment-status');
+        const statusData = await statusRes.json();
+        checkFulfillmentBanner(statusData);
       } catch (e) {}
     }
 
@@ -401,6 +398,7 @@ async function submitMassOrder() {
 // ORDER HISTORY
 // -------------------------------------------------------------
 let orderFilterStatus = 'all';
+let loadedUserOrders = [];
 
 async function loadUserOrders(silent = false) {
   const tbody = document.getElementById('userOrdersTableBody');
@@ -425,6 +423,7 @@ async function loadUserOrders(silent = false) {
 
     const res = await fetch(url);
     const orders = await res.json();
+    loadedUserOrders = orders;
 
     if (orders.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 30px; color: var(--text-muted);">No orders found.</td></tr>';
@@ -437,13 +436,20 @@ async function loadUserOrders(silent = false) {
       const statusClass = `status-${o.status.replace(/\s+/g, '')}`;
       const canRefill = (o.status === 'Completed' || o.status === 'Partial') && o.refill_status !== 'Requested';
 
-      const modeBadge = o.provider_id 
-        ? '<div style="font-size: 0.72rem; color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Live Provider Dispatch</div>'
-        : '<div style="font-size: 0.72rem; color: #d97706; font-weight: 600;"><i class="fas fa-flask"></i> Local Simulation (No Provider API)</div>';
+      let modeBadge = '';
+      if (o.provider_order_id) {
+        modeBadge = `<div style="font-size: 0.72rem; color: #16a34a; font-weight: 600;"><i class="fas fa-check-circle"></i> Live Delivery (Upstream #${o.provider_order_id})</div>`;
+      } else if (o.error_message) {
+        modeBadge = `<div style="font-size: 0.72rem; color: #dc2626; font-weight: 600;" title="${o.error_message}"><i class="fas fa-exclamation-triangle"></i> ${o.error_message.length > 40 ? o.error_message.substring(0, 37) + '...' : o.error_message}</div>`;
+      } else if (o.provider_id) {
+        modeBadge = `<div style="font-size: 0.72rem; color: #2563eb; font-weight: 600;"><i class="fas fa-paper-plane"></i> Forwarding to Upstream...</div>`;
+      } else {
+        modeBadge = `<div style="font-size: 0.72rem; color: #d97706; font-weight: 600;"><i class="fas fa-flask"></i> Sandbox Demo (Connect Provider)</div>`;
+      }
 
       html += `
         <tr>
-          <td><strong>${o.id}</strong></td>
+          <td><strong style="cursor: pointer; color: var(--primary);" onclick="openOrderDetailsModal(${o.id})">#${o.id}</strong></td>
           <td style="font-size:0.8rem; color:var(--text-muted);">${dateStr}</td>
           <td>
             <div style="font-weight: 600; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.service_name}">
@@ -462,7 +468,12 @@ async function loadUserOrders(silent = false) {
           <td>${o.remains}</td>
           <td><span class="status-badge ${statusClass}">${o.status}</span></td>
           <td>
-            ${canRefill ? `<button class="btn btn-outline btn-sm" onclick="requestRefill(${o.id})">Refill</button>` : (o.refill_status !== 'None' ? `<span style="font-size:0.75rem; color:var(--text-muted);">${o.refill_status}</span>` : '-')}
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button class="btn btn-outline btn-sm" onclick="openOrderDetailsModal(${o.id})" title="View Details">
+                <i class="fas fa-info-circle"></i>
+              </button>
+              ${canRefill ? `<button class="btn btn-outline btn-sm" onclick="requestRefill(${o.id})">Refill</button>` : (o.refill_status !== 'None' ? `<span style="font-size:0.75rem; color:var(--text-muted);">${o.refill_status}</span>` : '')}
+            </div>
           </td>
         </tr>
       `;
@@ -472,6 +483,51 @@ async function loadUserOrders(silent = false) {
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--danger);">Failed to load orders.</td></tr>';
   }
+}
+
+function openOrderDetailsModal(orderId) {
+  const o = loadedUserOrders.find(item => item.id === orderId);
+  if (!o) return;
+
+  document.getElementById('dtlOrderId').textContent = o.id;
+  document.getElementById('dtlOrderDate').textContent = new Date(o.created_at).toLocaleString();
+  document.getElementById('dtlOrderService').textContent = o.service_name;
+
+  const linkEl = document.getElementById('dtlOrderLink');
+  linkEl.href = o.link;
+  linkEl.textContent = o.link;
+
+  document.getElementById('dtlOrderQty').textContent = o.quantity.toLocaleString();
+  document.getElementById('dtlOrderCharge').textContent = `$${o.charge.toFixed(4)}`;
+
+  const badgeEl = document.getElementById('dtlOrderStatusBadge');
+  badgeEl.className = `status-badge status-${o.status.replace(/\s+/g, '')}`;
+  badgeEl.textContent = o.status;
+  document.getElementById('dtlOrderRemains').textContent = o.remains.toLocaleString();
+  document.getElementById('dtlOrderStartCount').textContent = o.start_count.toLocaleString();
+
+  let engineText = 'Local Simulation Mode (No Provider API)';
+  if (o.provider_order_id) {
+    engineText = `Live Upstream Provider (Order #${o.provider_order_id})`;
+  } else if (o.provider_id) {
+    engineText = `Forwarding to Provider (ID #${o.provider_id})`;
+  }
+  document.getElementById('dtlOrderEngine').textContent = engineText;
+
+  const errRow = document.getElementById('dtlOrderErrorRow');
+  const errText = document.getElementById('dtlOrderError');
+  if (o.error_message) {
+    errRow.style.display = 'block';
+    errText.textContent = o.error_message;
+  } else {
+    errRow.style.display = 'none';
+  }
+
+  document.getElementById('orderDetailsModal').classList.add('active');
+}
+
+function closeOrderDetailsModal() {
+  document.getElementById('orderDetailsModal').classList.remove('active');
 }
 
 async function requestRefill(orderId) {
@@ -1207,33 +1263,91 @@ async function loadAdminTickets() {
   }
 }
 
+let adminProvidersList = [];
+
 async function loadAdminProviders() {
   const tbody = document.getElementById('admProvidersTableBody');
   try {
-    const res = await fetch('/admin/providers');
-    const providers = await res.json();
+    const [provRes, statRes] = await Promise.all([
+      fetch('/admin/providers'),
+      fetch('/admin/fulfillment-status')
+    ]);
+
+    const providers = await provRes.json();
+    const statusData = await statRes.json();
+    adminProvidersList = providers;
+
+    // Update fulfillment mode indicator
+    const modeLabel = document.getElementById('fulfillmentModeLabel');
+    const btnLive = document.getElementById('btnModeLive');
+    const btnSim = document.getElementById('btnModeSim');
+
+    if (modeLabel) {
+      if (statusData.fulfillment_mode === 'simulation') {
+        modeLabel.textContent = 'Sandbox Simulation (Demo Only)';
+        modeLabel.style.color = '#d97706';
+        if (btnSim) { btnSim.className = 'btn btn-sm btn-primary'; }
+        if (btnLive) { btnLive.className = 'btn btn-sm btn-outline'; }
+      } else {
+        modeLabel.textContent = 'Live Provider Dispatch (Real Delivery)';
+        modeLabel.style.color = 'var(--primary)';
+        if (btnLive) { btnLive.className = 'btn btn-sm btn-primary'; }
+        if (btnSim) { btnSim.className = 'btn btn-sm btn-outline'; }
+      }
+    }
+
+    // Update top notice banner
+    checkFulfillmentBanner(statusData);
 
     if (providers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No upstream providers configured yet.</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding:30px;">
+            <p style="color:var(--text-muted); margin-bottom:12px;">No upstream providers configured yet.</p>
+            <button class="btn btn-primary btn-sm" onclick="openProviderModalForSafollow()">
+              <i class="fas fa-plus"></i> Connect SAFollow API
+            </button>
+          </td>
+        </tr>
+      `;
       return;
     }
 
     let html = '';
     providers.forEach(p => {
+      const hasKey = p.api_key && p.api_key.trim().length > 5;
+      const linkedBadge = p.linked_services > 0 
+        ? `<span class="badge-refill" style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:4px; font-size:0.78rem;"><i class="fas fa-check"></i> ${p.linked_services} / 1,034 Linked</span>`
+        : `<span class="badge-norefill" style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:4px; font-size:0.78rem;"><i class="fas fa-unlink"></i> 0 Linked</span>`;
+
+      const keyStatus = hasKey 
+        ? `<span style="color:#16a34a; font-size:0.75rem;"><i class="fas fa-check-circle"></i> Key Configured</span>`
+        : `<span style="color:#dc2626; font-size:0.75rem;"><i class="fas fa-exclamation-triangle"></i> Key Missing</span>`;
+
       html += `
         <tr>
           <td><strong>#${p.id}</strong></td>
-          <td><strong>${p.name}</strong></td>
+          <td>
+            <strong>${p.name}</strong><br>
+            ${keyStatus}
+          </td>
           <td><code>${p.api_url}</code></td>
-          <td><strong>$ ${p.balance.toFixed(2)} ${p.currency}</strong></td>
+          <td><strong style="color:var(--primary); font-size:0.95rem;">$ ${p.balance.toFixed(2)} ${p.currency || 'USD'}</strong></td>
+          <td>${linkedBadge}</td>
           <td><span class="status-badge status-Completed">${p.status}</span></td>
           <td>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-outline btn-sm" onclick="testProviderConnection(${p.id})">
-                <i class="fas fa-plug"></i> Test Balance
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="testProviderConnection(${p.id})" title="Check Provider Balance">
+                <i class="fas fa-vial"></i> Test Balance
               </button>
-              <button class="btn btn-primary btn-sm" onclick="bindAllServicesToProvider(${p.id})">
-                <i class="fas fa-link"></i> Link All 1,034 Services
+              <button class="btn btn-outline btn-sm" onclick="openEditProviderModal(${p.id})" title="Edit Name, URL or API Key">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="bindAllServicesToProvider(${p.id})" title="Link all services to forward to this provider">
+                <i class="fas fa-link"></i> Link 1,034 Services
+              </button>
+              <button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="deleteProvider(${p.id})" title="Delete provider">
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </td>
@@ -1242,7 +1356,207 @@ async function loadAdminProviders() {
     });
     tbody.innerHTML = html;
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="6">Failed to load providers</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--danger);">Failed to load providers</td></tr>';
+  }
+}
+
+function checkFulfillmentBanner(statusData) {
+  const banner = document.getElementById('simulationNoticeBanner');
+  if (!banner) return;
+
+  if (currentUser.role !== 'admin') {
+    banner.style.display = 'none';
+    return;
+  }
+
+  const titleEl = document.getElementById('bannerNoticeTitle');
+  const textEl = document.getElementById('bannerNoticeText');
+
+  const readyProvider = (statusData.providers || []).find(p => p.has_key && p.linked_services > 0);
+
+  if (readyProvider && statusData.fulfillment_mode === 'live') {
+    banner.style.display = 'flex';
+    banner.style.background = '#f0fdf4';
+    banner.style.borderColor = '#bbf7d0';
+    banner.style.color = '#166534';
+    titleEl.textContent = `🟢 Live Order Delivery Active (${readyProvider.name})`;
+    textEl.textContent = `All orders are automatically forwarded to wholesale API (${readyProvider.name}). Real followers and likes will be dispatched directly!`;
+  } else {
+    banner.style.display = 'flex';
+    banner.style.background = '#fffbeb';
+    banner.style.borderColor = '#fde68a';
+    banner.style.color = '#92400e';
+    titleEl.textContent = `⚠️ Action Required to Deliver Real Followers to Instagram`;
+    textEl.textContent = `Your panel needs your wholesale API Key from safollow.com to dispatch real followers to target profiles.`;
+  }
+}
+
+async function setFulfillmentMode(mode) {
+  try {
+    const res = await fetch('/admin/fulfillment-mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode })
+    });
+    const data = await res.json();
+    alert(data.message || `Fulfillment mode updated to ${mode}`);
+    loadAdminProviders();
+  } catch (e) {
+    alert('Failed to update fulfillment mode');
+  }
+}
+
+function openAddProviderModal() {
+  document.getElementById('providerFormId').value = '';
+  document.getElementById('providerModalTitle').textContent = 'Add Upstream SMM Provider';
+  applyProviderPreset('safollow');
+  document.getElementById('providerTestResult').style.display = 'none';
+  document.getElementById('providerModal').classList.add('active');
+}
+
+function openProviderModalForSafollow() {
+  const existing = adminProvidersList.find(p => p.api_url && p.api_url.includes('safollow.com'));
+  if (existing) {
+    openEditProviderModal(existing.id);
+  } else {
+    openAddProviderModal();
+  }
+}
+
+function openEditProviderModal(providerId) {
+  const p = adminProvidersList.find(item => item.id === providerId);
+  if (!p) return;
+
+  document.getElementById('providerFormId').value = p.id;
+  document.getElementById('providerModalTitle').textContent = `Edit Provider #${p.id} (${p.name})`;
+  document.getElementById('providerFormName').value = p.name;
+  document.getElementById('providerFormUrl').value = p.api_url;
+  document.getElementById('providerFormKey').value = p.api_key || '';
+  document.getElementById('providerTestResult').style.display = 'none';
+  document.getElementById('providerModal').classList.add('active');
+}
+
+function closeProviderModal() {
+  document.getElementById('providerModal').classList.remove('active');
+}
+
+function applyProviderPreset(preset) {
+  const nameInput = document.getElementById('providerFormName');
+  const urlInput = document.getElementById('providerFormUrl');
+
+  if (preset === 'safollow') {
+    nameInput.value = 'SAFollow Official API';
+    urlInput.value = 'https://www.safollow.com/api/v2';
+  } else if (preset === 'jap') {
+    nameInput.value = 'JustAnotherPanel';
+    urlInput.value = 'https://justanotherpanel.com/api/v2';
+  } else if (preset === 'peakerr') {
+    nameInput.value = 'Peakerr SMM';
+    urlInput.value = 'https://peakerr.com/api/v2';
+  } else if (preset === 'custom') {
+    nameInput.value = '';
+    urlInput.value = 'https://';
+  }
+}
+
+async function testCurrentFormKey() {
+  const url = document.getElementById('providerFormUrl').value.trim();
+  const key = document.getElementById('providerFormKey').value.trim();
+  const resDiv = document.getElementById('providerTestResult');
+
+  if (!url || !key) {
+    resDiv.style.display = 'block';
+    resDiv.style.background = '#fee2e2';
+    resDiv.style.color = '#991b1b';
+    resDiv.textContent = 'Please enter both the API URL and API Key first.';
+    return;
+  }
+
+  resDiv.style.display = 'block';
+  resDiv.style.background = '#eff6ff';
+  resDiv.style.color = '#1e40af';
+  resDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing connection & checking balance...';
+
+  const provId = document.getElementById('providerFormId').value;
+  try {
+    let testUrl = '/admin/providers';
+    let method = 'POST';
+    if (provId) {
+      testUrl = `/admin/providers/${provId}`;
+      method = 'PUT';
+    }
+
+    const saveRes = await fetch(testUrl, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('providerFormName').value.trim() || 'Provider API',
+        api_url: url,
+        api_key: key
+      })
+    });
+    const saveData = await saveRes.json();
+    const activeId = provId || saveData.id;
+
+    if (!activeId) throw new Error('Could not obtain provider ID');
+
+    const testRes = await fetch(`/admin/providers/${activeId}/test`, { method: 'POST' });
+    const testData = await testRes.json();
+
+    if (testRes.ok) {
+      resDiv.style.background = '#dcfce7';
+      resDiv.style.color = '#166534';
+      resDiv.innerHTML = `<strong>✅ Connection Successful!</strong><br>Wholesale Account Balance: <strong>$${testData.balance} ${testData.currency}</strong>`;
+      document.getElementById('providerFormId').value = activeId;
+      loadAdminProviders();
+    } else {
+      resDiv.style.background = '#fee2e2';
+      resDiv.style.color = '#991b1b';
+      resDiv.innerHTML = `<strong>❌ Provider Error:</strong> ${testData.error || 'Connection failed'}`;
+    }
+  } catch (err) {
+    resDiv.style.background = '#fee2e2';
+    resDiv.style.color = '#991b1b';
+    resDiv.textContent = `Test failed: ${err.message}`;
+  }
+}
+
+async function saveProviderForm(e) {
+  e.preventDefault();
+  const id = document.getElementById('providerFormId').value;
+  const name = document.getElementById('providerFormName').value.trim();
+  const url = document.getElementById('providerFormUrl').value.trim();
+  const key = document.getElementById('providerFormKey').value.trim();
+
+  try {
+    let reqUrl = '/admin/providers';
+    let method = 'POST';
+    if (id) {
+      reqUrl = `/admin/providers/${id}`;
+      method = 'PUT';
+    }
+
+    const res = await fetch(reqUrl, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, api_url: url, api_key: key })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save provider');
+
+    const providerId = id || data.id;
+
+    // Automatically bind all 1,034 services to this provider!
+    if (providerId) {
+      await fetch(`/admin/providers/${providerId}/bind-all`, { method: 'POST' });
+    }
+
+    alert(`Provider "${name}" saved and all 1,034 services are now linked to it! Real orders will now be dispatched upstream.`);
+    closeProviderModal();
+    loadAdminProviders();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
   }
 }
 
@@ -1273,22 +1587,17 @@ async function bindAllServicesToProvider(providerId) {
   }
 }
 
-function openAddProviderModal() {
-  const name = prompt('Enter Provider Name (e.g. SAFollow Upstream / JustAnotherPanel):');
-  if (!name) return;
-  const url = prompt('Enter Provider API URL (e.g. https://www.safollow.com/api/v2):');
-  if (!url) return;
-  const key = prompt('Enter Provider API Key:');
-  if (!key) return;
+async function deleteProvider(providerId) {
+  if (!confirm(`Delete Provider #${providerId}? This will unlink all services.`)) return;
 
-  fetch('/admin/providers', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, api_url: url, api_key: key })
-  }).then(r => r.json()).then(data => {
-    alert(data.message || 'Provider added');
+  try {
+    const res = await fetch(`/admin/providers/${providerId}`, { method: 'DELETE' });
+    const data = await res.json();
+    alert(data.message || 'Provider deleted');
     loadAdminProviders();
-  });
+  } catch (e) {
+    alert('Failed to delete provider');
+  }
 }
 
 async function loadAdminSettings() {

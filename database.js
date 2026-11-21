@@ -68,6 +68,7 @@ function initDb() {
       refill_status TEXT DEFAULT 'None',
       provider_id INTEGER DEFAULT NULL,
       provider_order_id INTEGER DEFAULT NULL,
+      error_message TEXT DEFAULT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -120,11 +121,17 @@ function initDb() {
     );
   `);
 
+  // Migration checks
+  try {
+    db.prepare('ALTER TABLE orders ADD COLUMN error_message TEXT DEFAULT NULL').run();
+  } catch (e) {}
+
   // Default Settings
   const defaultSettings = {
     site_name: 'SAFollow',
     site_tagline: 'Bangladesh SMM Panel | Affordable SMM Services for Resellers',
     bdt_rate: '120.0',
+    fulfillment_mode: 'live',
     whatsapp_number: '+8801864614704',
     telegram_channel: 'https://t.me/safollow_official',
     bkash_number: '01864614704 (Personal / Send Money)',
