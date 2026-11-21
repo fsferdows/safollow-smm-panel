@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation – SAFollow V3.0 Standard Reseller API</title>
+  <meta name="description" content="Official documentation for SAFollow SMM API v2. Automate social media marketing orders with RESTful JSON API.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .api-endpoint-badge {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-block;
+    }
+    .code-box {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.88rem;
+      overflow-x: auto;
+      margin: 14px 0 24px;
+      border: 1px solid #334155;
+    }
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 0.9rem;
+    }
+    .param-table th, .param-table td {
+      border: 1px solid var(--border-color);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .param-table th {
+      background: var(--body-bg);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fas fa-rocket text-primary"></i>
+        <span>SAFollow</span>
+        <span class="brand-badge">V3.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/api-docs" class="active">API Docs</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" id="currencyToggleBtn">$ USD</button>
+        <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="section-wrapper" style="max-width: 960px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 40px;">
+      <div class="section-tag">Developers & Resellers</div>
+      <h1 class="section-title">Standard SMM Reseller API v2</h1>
+      <p class="section-subtitle">
+        Integrate SAFollow services directly into your website, child panel, or bot. Fully compatible with Perfect Panel, RentalPanel, and standard SMM scripts.
+      </p>
+    </div>
+
+    <!-- API Overview -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="margin-bottom: 12px; font-weight: 700;">API Connection Details</h3>
+      <table class="param-table" style="margin-bottom: 0;">
+        <tr>
+          <td style="width: 180px; font-weight: 600;">HTTP Method</td>
+          <td><code>POST</code></td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600;">API URL</td>
+          <td><span class="api-endpoint-badge">https://www.safollow.com/api/v2</span> (or <code>/api</code>)</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600;">Response Format</td>
+          <td><code>JSON</code></td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600;">Authentication</td>
+          <td>Pass your secret <code>key</code> in the POST request body</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Action 1: Service List -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="font-weight: 700; margin-bottom: 8px;">1. Service List</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">Retrieve all available active services, rates, and limits.</p>
+
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>key</code></td>
+            <td>String</td>
+            <td>Your unique API Key</td>
+          </tr>
+          <tr>
+            <td><code>action</code></td>
+            <td>String</td>
+            <td><code>services</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <strong>Example Response:</strong>
+      <pre class="code-box">[
+  {
+    "service": 2374,
+    "name": "Facebook Post Like 👍 | Page Data | Instant | Speed 5-10k Day | Non Drop | No Refill",
+    "type": "Default",
+    "category": "Facebook Reaction👍❤️😍 | Vn Page Data & Non Drop (Sv1)",
+    "rate": "0.1851",
+    "min": "50",
+    "max": "100000",
+    "refill": false,
+    "cancel": false
+  },
+  {
+    "service": 2211,
+    "name": "Facebook Followers | 100% Hidden | Instant I Speed 50k Day | Non Drop | 30 Day Refill",
+    "type": "Default",
+    "category": "Facebook Follower | 100% Hidden+Cheap",
+    "rate": "0.1662",
+    "min": "100",
+    "max": "50000",
+    "refill": true,
+    "cancel": false
+  }
+]</pre>
+    </div>
+
+    <!-- Action 2: Add Order -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="font-weight: 700; margin-bottom: 8px;">2. Add Order</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">Place a new single order for any service.</p>
+
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>key</code></td>
+            <td>String</td>
+            <td>Your unique API Key</td>
+          </tr>
+          <tr>
+            <td><code>action</code></td>
+            <td>String</td>
+            <td><code>add</code></td>
+          </tr>
+          <tr>
+            <td><code>service</code></td>
+            <td>Integer</td>
+            <td>Service ID (e.g. <code>2374</code>)</td>
+          </tr>
+          <tr>
+            <td><code>link</code></td>
+            <td>String</td>
+            <td>Target URL (profile, post, channel, video)</td>
+          </tr>
+          <tr>
+            <td><code>quantity</code></td>
+            <td>Integer</td>
+            <td>Needed quantity (must respect min and max)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <strong>Example Response:</strong>
+      <pre class="code-box">{
+  "order": 149204
+}</pre>
+    </div>
+
+    <!-- Action 3: Order Status -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="font-weight: 700; margin-bottom: 8px;">3. Order Status</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">Check the real-time fulfillment status of one or multiple orders.</p>
+
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>key</code></td>
+            <td>String</td>
+            <td>Your unique API Key</td>
+          </tr>
+          <tr>
+            <td><code>action</code></td>
+            <td>String</td>
+            <td><code>status</code></td>
+          </tr>
+          <tr>
+            <td><code>order</code></td>
+            <td>Integer</td>
+            <td>Single order ID (e.g. <code>149204</code>)</td>
+          </tr>
+          <tr>
+            <td><code>orders</code></td>
+            <td>String</td>
+            <td>(Optional) Comma-separated order IDs: <code>149204,149205</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <strong>Example Response (Single Order):</strong>
+      <pre class="code-box">{
+  "charge": "0.1851",
+  "start_count": "1520",
+  "status": "In progress",
+  "remains": "850",
+  "currency": "USD"
+}</pre>
+
+      <strong>Example Response (Multiple Orders):</strong>
+      <pre class="code-box">{
+  "149204": {
+    "charge": "0.1851",
+    "start_count": "1520",
+    "status": "Completed",
+    "remains": "0",
+    "currency": "USD"
+  },
+  "149205": {
+    "charge": "0.3324",
+    "start_count": "0",
+    "status": "Pending",
+    "remains": "2000",
+    "currency": "USD"
+  }
+}</pre>
+    </div>
+
+    <!-- Action 4: User Balance -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="font-weight: 700; margin-bottom: 8px;">4. User Balance</h3>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">Check your account's remaining credit balance.</p>
+
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>key</code></td>
+            <td>String</td>
+            <td>Your unique API Key</td>
+          </tr>
+          <tr>
+            <td><code>action</code></td>
+            <td>String</td>
+            <td><code>balance</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <strong>Example Response:</strong>
+      <pre class="code-box">{
+  "balance": "84.2500",
+  "currency": "USD"
+}</pre>
+    </div>
+
+    <!-- Code Examples -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px;">
+      <h3 style="font-weight: 700; margin-bottom: 12px;">Python Integration Example</h3>
+      <pre class="code-box">import requests
+
+API_URL = "http://localhost:3000/api/v2"
+API_KEY = "YOUR_API_KEY_HERE"
+
+# 1. Check Balance
+res = requests.post(API_URL, data={"key": API_KEY, "action": "balance"})
+print("Balance:", res.json())
+
+# 2. Add an Order
+order_data = {
+    "key": API_KEY,
+    "action": "add",
+    "service": 2374,
+    "link": "https://www.facebook.com/example/posts/123",
+    "quantity": 1000
+}
+order_res = requests.post(API_URL, data=order_data).json()
+print("Order placed:", order_res)
+
+# 3. Check Order Status
+if "order" in order_res:
+    status_res = requests.post(API_URL, data={
+        "key": API_KEY,
+        "action": "status",
+        "order": order_res["order"]
+    }).json()
+    print("Status:", status_res)</pre>
+    </div>
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">Welcome Back 👋</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Access your SMM dashboard and manage your orders.</p>
+      <div id="authErrorMsg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="authUsername" placeholder="Enter username" required>
+        </div>
+        <div class="form-group" id="authEmailGroup" style="display: none;">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="authEmail" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="authPassword" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 8px;">
+          Sign In to Dashboard
+        </button>
+        <div id="authSwitchText" style="text-align: center; margin-top: 16px; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="javascript:void(0)" onclick="openAuthModal('signup')">Register Free</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="footer-bottom">
+      <div>&copy; 2026 SAFollow V3.0. All Rights Reserved.</div>
+      <div>High-speed SMM reseller panel.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

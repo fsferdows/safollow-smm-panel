@@ -1,0 +1,19 @@
+{
+  "name": "safollow-platform",
+  "version": "3.0.0",
+  "description": "SAFollow - Bangladesh SMM Panel & Reseller Platform V3.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test.js && node test_extra.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service & Policies – SAFollow V3.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fas fa-rocket text-primary"></i>
+        <span>SAFollow</span>
+        <span class="brand-badge">V3.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/api-docs">API Docs</a></li>
+        <li><a href="/terms" class="active">Terms</a></li>
+        <li><a href="/faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" id="currencyToggleBtn">$ USD</button>
+        <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="section-wrapper" style="max-width: 900px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 40px;">
+      <div class="section-tag">Legal & Guidelines</div>
+      <h1 class="section-title">Terms of Service & Refund Policy</h1>
+      <p class="section-subtitle">Last updated: October 2026. Please review our policies carefully before ordering.</p>
+    </div>
+
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 36px; line-height: 1.8;">
+      <h3 style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">1. Acceptance of Terms</h3>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">
+        By accessing or using SAFollow SMM Panel ("SAFollow", "we", "our"), including our web dashboard and automated API v2, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+      </p>
+
+      <h3 style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">2. Service Delivery</h3>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">
+        SAFollow solely provides promotional social media engagement services (followers, views, likes, shares, comments, subscribers). We strive to deliver all orders within the estimated average speed window. However, delivery speed may fluctuate depending on social network algorithm changes or high server load.
+      </p>
+
+      <h3 style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">3. Account & Link Requirements</h3>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">
+        Ensure that the target social media profile, page, or post is strictly set to <strong>Public</strong>. Do not place duplicate orders for the same link while an existing order is still active or in progress. Private profiles or broken links will result in order failure or non-delivery without automatic refund eligibility.
+      </p>
+
+      <h3 id="refund" style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">4. Refund Policy</h3>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">
+        No refund will be made to your payment source (e.g. bKash, Nagad, bank account, or cryptocurrency wallet) once a deposit is completed. All deposited funds must be utilized for placing orders on SAFollow. If an order cannot be completed or is marked as Canceled by our system, the unfulfilled charge is automatically refunded directly to your SAFollow account balance.
+      </p>
+
+      <h3 style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">5. Refill Guarantee & Drop Policy</h3>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">
+        Services that state "Refill" or "30-Day Refill" in their title include free refill coverage for 30 days from order placement. If a drop occurs below the initial start count + ordered quantity, customers may trigger the Refill button in their dashboard. Services clearly marked "No Refill" do not receive replacements or warranty.
+      </p>
+
+      <h3 id="privacy" style="font-weight: 700; margin-bottom: 12px; color: var(--primary);">6. Privacy & Confidentiality</h3>
+      <p style="color: var(--text-muted);">
+        We respect your privacy. SAFollow will never ask for your social media account passwords. We will never share or sell your email address, contact numbers, or order history with third parties.
+      </p>
+    </div>
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">Welcome Back 👋</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Access your SMM dashboard and manage your orders.</p>
+      <div id="authErrorMsg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="authUsername" placeholder="Enter username" required>
+        </div>
+        <div class="form-group" id="authEmailGroup" style="display: none;">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="authEmail" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="authPassword" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 8px;">
+          Sign In to Dashboard
+        </button>
+        <div id="authSwitchText" style="text-align: center; margin-top: 16px; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="javascript:void(0)" onclick="openAuthModal('signup')">Register Free</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="footer-bottom">
+      <div>&copy; 2026 SAFollow V3.0. All Rights Reserved.</div>
+      <div>High-speed SMM reseller panel.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAFollow – Bangladesh SMM Panel | Affordable SMM Services for Resellers</title>
+  <meta name="description" content="SAFollow is a Bangladesh-based SMM panel offering affordable social media marketing services for Facebook, Instagram, TikTok, YouTube and more.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🔥 <strong id="announcementText">Welcome to SAFollow V3! Facebook & Instagram non-drop services running ultra-fast. Instant bKash & Nagad deposits.</strong></span>
+    <a href="/services">View Services</a>
+  </div>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fas fa-rocket text-primary"></i>
+        <span>SAFollow</span>
+        <span class="brand-badge">V3.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/api-docs">API Docs</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Currency Switcher -->
+        <button class="btn btn-outline btn-sm" id="currencyToggleBtn">$ USD</button>
+        <!-- Theme Switcher -->
+        <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fas fa-moon"></i></button>
+        <!-- Auth Buttons -->
+        <button class="btn btn-outline btn-sm" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-pill">
+        <i class="fas fa-bolt"></i> #1 Trusted SMM Panel in Bangladesh
+      </div>
+      <h1 class="hero-title">
+        Scale Your Social Presence with <span class="gradient-text">Instant Delivery</span>
+      </h1>
+      <p class="hero-desc">
+        Wholesale SMM reseller panel providing high-retention Facebook Followers, Instagram Likes, YouTube Subscribers, TikTok Views & Telegram Members at unbeatable rates.
+      </p>
+
+      <div class="hero-actions" style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="openAuthModal('signup')" style="padding: 14px 28px; font-size: 1rem;">
+          <i class="fas fa-user-plus"></i> Get Started Free
+        </button>
+        <a href="/services" class="btn btn-outline" style="padding: 14px 28px; font-size: 1rem;">
+          <i class="fas fa-list-ul"></i> Explore 1,000+ Services
+        </a>
+      </div>
+
+      <!-- Live Counters -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <h3>2,913,397+</h3>
+          <p>Orders Completed</p>
+        </div>
+        <div class="stat-item">
+          <h3>16,871+</h3>
+          <p>Active Resellers</p>
+        </div>
+        <div class="stat-item">
+          <h3>$0.0001</h3>
+          <p>Starting / 1,000</p>
+        </div>
+        <div class="stat-item">
+          <h3>24/7</h3>
+          <p>Live WhatsApp Support</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Price Calculator Widget -->
+    <div class="calculator-card">
+      <h3><i class="fas fa-calculator text-primary"></i> Instant Price Calculator</h3>
+      <p>Estimate the cost of any social media service in real-time.</p>
+
+      <div class="form-group">
+        <label class="form-label">Select Social Network / Category</label>
+        <select class="form-control" id="calcCategorySelect">
+          <option value="">Loading categories...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Specific Service</label>
+        <select class="form-control" id="calcServiceSelect" disabled>
+          <option value="">-- Choose Category First --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" style="margin-bottom: 0;">Order Quantity</label>
+          <span id="calcMinMaxDisplay" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Min: 0 | Max: 0</span>
+        </div>
+        <input type="number" class="form-control" id="calcQuantityInput" value="1000" min="1" step="100">
+      </div>
+
+      <div class="cost-box">
+        <span class="cost-label">Estimated Total:</span>
+        <span class="cost-value" id="calcCostDisplay">$ 0.0000</span>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="openAuthModal('signup')">
+        <i class="fas fa-cart-plus"></i> Place Order Now
+      </button>
+    </div>
+  </section>
+
+  <!-- Platform Icons Ribbon -->
+  <section class="platform-section">
+    <div class="platform-slider">
+      <div class="platform-badge"><i class="fab fa-facebook text-primary"></i> Facebook</div>
+      <div class="platform-badge"><i class="fab fa-instagram" style="color: #e1306c;"></i> Instagram</div>
+      <div class="platform-badge"><i class="fab fa-youtube text-danger"></i> YouTube</div>
+      <div class="platform-badge"><i class="fab fa-tiktok"></i> TikTok</div>
+      <div class="platform-badge"><i class="fab fa-telegram text-info"></i> Telegram</div>
+      <div class="platform-badge"><i class="fab fa-x-twitter"></i> X / Twitter</div>
+      <div class="platform-badge"><i class="fab fa-whatsapp text-success"></i> WhatsApp</div>
+      <div class="platform-badge"><i class="fab fa-spotify text-success"></i> Spotify</div>
+      <div class="platform-badge"><i class="fab fa-linkedin text-primary"></i> LinkedIn</div>
+    </div>
+  </section>
+
+  <!-- Why Choose Us -->
+  <section class="section-wrapper">
+    <div class="section-header">
+      <div class="section-tag">Why SAFollow</div>
+      <h2 class="section-title">Engineered for Agencies, Influencers & Resellers</h2>
+      <p class="section-subtitle">
+        We provide the highest quality SMM services backed by automated servers, instant delivery, and dedicated customer support.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+        <h4>Lightning Fast Delivery</h4>
+        <p>Orders begin processing instantly within 0–5 minutes. Fully automated system connected directly to high-capacity provider APIs.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h4>Non-Drop & 30-Day Refill</h4>
+        <p>Our premium followers, views, and likes feature non-drop stability with automatic 30-day free refills on supported services.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-tags"></i></div>
+        <h4>Unbeatable Reseller Pricing</h4>
+        <p>Direct wholesale rates starting from $0.0001 per 1,000. Maximum profit margins for social media marketing agencies and resellers.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-wallet"></i></div>
+        <h4>Bangladeshi & Global Payments</h4>
+        <p>Deposit funds seamlessly using bKash, Nagad, Rocket, Binance Pay (USDT Crypto), Perfect Money, Payeer, and Credit/Debit Cards.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-code"></i></div>
+        <h4>Standard Reseller API v2</h4>
+        <p>Fully compliant RESTful SMM API v2. Connect your own child panel, WordPress, or custom app to automate order placement and tracking.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-headset"></i></div>
+        <h4>24/7 Human WhatsApp Support</h4>
+        <p>Dedicated bilingual support in both Bengali (বাংলা) and English. Quick ticket responses and instant WhatsApp chat assistance.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Services Preview Section -->
+  <section class="section-wrapper" style="padding-top: 0;">
+    <div class="section-header">
+      <div class="section-tag">Live Catalog</div>
+      <h2 class="section-title">Popular SMM Services</h2>
+      <p class="section-subtitle">A glimpse of our most requested high-speed engagement packages.</p>
+    </div>
+
+    <div class="table-container">
+      <table class="smm-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Service Name</th>
+            <th>Rate / 1K</th>
+            <th>Min / Max</th>
+            <th>Avg Time</th>
+            <th>Guarantee</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="homeServicesTableBody">
+          <tr>
+            <td>2374</td>
+            <td><strong>Facebook Post Like 👍 | Page Data | Instant | Speed 5-10k Day</strong></td>
+            <td data-usd-rate="0.1851">$ 0.1851</td>
+            <td>50 / 100,000</td>
+            <td>53 minutes</td>
+            <td><span class="badge-norefill">No Refill</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Order</button></td>
+          </tr>
+          <tr>
+            <td>2211</td>
+            <td><strong>Facebook Followers | 100% Hidden | Instant | Speed 50k Day | 30 Day Refill</strong></td>
+            <td data-usd-rate="0.1662">$ 0.1662</td>
+            <td>100 / 50,000</td>
+            <td>20 minutes</td>
+            <td><span class="badge-refill">30-Day Refill</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Order</button></td>
+          </tr>
+          <tr>
+            <td>3105</td>
+            <td><strong>Instagram Followers | High Quality Profiles | Non-Drop Guaranteed</strong></td>
+            <td data-usd-rate="0.4500">$ 0.4500</td>
+            <td>100 / 250,000</td>
+            <td>15 minutes</td>
+            <td><span class="badge-refill">30-Day Refill</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Order</button></td>
+          </tr>
+          <tr>
+            <td>4021</td>
+            <td><strong>YouTube Monetizable Watch Time (4,000 Hours Package) | High Retention</strong></td>
+            <td data-usd-rate="2.4000">$ 2.4000</td>
+            <td>500 / 100,000</td>
+            <td>2 hours</td>
+            <td><span class="badge-refill">Lifetime Guarantee</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Order</button></td>
+          </tr>
+          <tr>
+            <td>5180</td>
+            <td><strong>TikTok Video Views | Ultra Fast | 100M Capacity | Instant Start</strong></td>
+            <td data-usd-rate="0.0005">$ 0.0005</td>
+            <td>1,000 / 10,000,000</td>
+            <td>5 minutes</td>
+            <td><span class="badge-refill">Non Drop</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Order</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="/services" class="btn btn-primary" style="padding: 12px 28px;">
+        <i class="fas fa-arrow-right"></i> View Complete List of 1,034+ Services
+      </a>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section-wrapper" style="background: var(--card-bg); border-radius: var(--radius-lg); margin-bottom: 80px; border: 1px solid var(--border-color);">
+    <div class="section-header">
+      <div class="section-tag">Simple Process</div>
+      <h2 class="section-title">How To Get Started in 4 Easy Steps</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; text-align: center;">
+      <div style="padding: 20px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-weight: 800; font-size: 1.2rem;">1</div>
+        <h4 style="margin-bottom: 8px;">Create Account</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Sign up in 30 seconds with just a username, email and password.</p>
+      </div>
+
+      <div style="padding: 20px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-weight: 800; font-size: 1.2rem;">2</div>
+        <h4 style="margin-bottom: 8px;">Add Balance</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Top up your wallet easily using bKash, Nagad, Rocket, or Binance Crypto.</p>
+      </div>
+
+      <div style="padding: 20px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-weight: 800; font-size: 1.2rem;">3</div>
+        <h4 style="margin-bottom: 8px;">Place Your Order</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Select your desired service, paste your social link and choose quantity.</p>
+      </div>
+
+      <div style="padding: 20px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-weight: 800; font-size: 1.2rem;">4</div>
+        <h4 style="margin-bottom: 8px;">Witness Growth</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Relax as our automated servers deliver your engagement instantly!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section-wrapper" style="padding-top: 0;">
+    <div class="section-header">
+      <div class="section-tag">Got Questions?</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item active">
+        <div class="faq-question">
+          <span>What is SAFollow SMM Panel?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          SAFollow is Bangladesh's leading automated Social Media Marketing (SMM) reseller panel. We provide high-quality followers, likes, comments, views, and watch hours across all major networks at wholesale reseller prices.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>How can I add funds with bKash, Nagad or Rocket?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Navigate to "Add Funds" in your dashboard. Send the exact amount to our official bKash/Nagad/Rocket Personal number, then enter your Transaction ID and Sender Number. Your balance will be credited promptly upon verification.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>What does 30-Day Refill Guarantee mean?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          If any drops occur within 30 days of ordering a refill-supported service, you can click the "Refill" button in your Order History to receive a free automatic top-up to restore your follower count.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Do you have an automated API for resellers?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Yes! We provide the standard SMM API v2 specification. You can generate your personal API Key from your profile and integrate our services into your child panel or custom scripts effortlessly.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Floating Contact Widgets -->
+  <div class="floating-widget">
+    <a href="https://wa.me/8801864614704" target="_blank" class="float-btn float-whatsapp" id="whatsappFloatLink" title="Chat on WhatsApp">
+      <i class="fab fa-whatsapp"></i>
+      <div class="online-pulse"></div>
+    </a>
+    <a href="https://t.me/safollow_official" target="_blank" class="float-btn float-telegram" id="telegramFloatLink" title="Join Telegram Channel">
+      <i class="fab fa-telegram-plane"></i>
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-logo" style="margin-bottom: 14px;">
+          <i class="fas fa-rocket text-primary"></i>
+          <span>SAFollow</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">
+          The #1 Bangladesh SMM Panel offering reliable, high-speed, affordable social media marketing services for influencers, resellers, and digital agencies worldwide.
+        </p>
+        <div style="display: flex; gap: 14px; font-size: 1.2rem; color: var(--primary);">
+          <a href="https://wa.me/8801864614704" target="_blank"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://t.me/safollow_official" target="_blank"><i class="fab fa-telegram"></i></a>
+          <a href="mailto:support@safollow.com"><i class="fas fa-envelope"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/services">Services List</a></li>
+          <li><a href="/api-docs">API Documentation</a></li>
+          <li><a href="/dashboard">User Dashboard</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Legal & Policies</h5>
+        <ul>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="/terms#privacy">Privacy Policy</a></li>
+          <li><a href="/terms#refund">Refund Policy</a></li>
+          <li><a href="/faq">Support FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Supported Payments</h5>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px;">Instant local & international gateway deposits:</p>
+        <div class="payment-badges">
+          <i class="fab fa-cc-visa text-primary" title="Visa"></i>
+          <i class="fab fa-cc-mastercard text-danger" title="Mastercard"></i>
+          <i class="fab fa-bitcoin" style="color: #f7931a;" title="Crypto"></i>
+          <span style="font-weight: 800; color: #e2136e; font-size: 1.1rem;">bKash</span>
+          <span style="font-weight: 800; color: #f7941d; font-size: 1.1rem;">Nagad</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 SAFollow V3.0. All Rights Reserved.</div>
+      <div>Designed for speed, reliability & security.</div>
+    </div>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">Welcome Back 👋</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Access your SMM dashboard and manage your orders.</p>
+
+      <div id="authErrorMsg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="authUsername" placeholder="Enter username" required>
+        </div>
+
+        <div class="form-group" id="authEmailGroup" style="display: none;">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="authEmail" placeholder="name@example.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="authPassword" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 8px;">
+          Sign In to Dashboard
+        </button>
+
+        <div id="authSwitchText" style="text-align: center; margin-top: 16px; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="javascript:void(0)" onclick="openAuthModal('signup')">Register Free</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

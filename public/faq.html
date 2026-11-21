@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions – SAFollow V3.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fas fa-rocket text-primary"></i>
+        <span>SAFollow</span>
+        <span class="brand-badge">V3.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/api-docs">API Docs</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/faq" class="active">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" id="currencyToggleBtn">$ USD</button>
+        <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="section-wrapper" style="max-width: 860px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 30px;">
+      <div class="section-tag">Support & Help</div>
+      <h1 class="section-title">Frequently Asked Questions</h1>
+      <p class="section-subtitle">Find quick answers to common questions about services, deposits, and orders.</p>
+    </div>
+
+    <!-- Live Help Notice -->
+    <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(139, 92, 246, 0.08)); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">💬 যেকোনো সমস্যার জন্য মেসেজ করুন (24/7 Support)</h4>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">আমাদের সাপোর্ট টিম সবসময় সক্রিয় রয়েছে। সরাসরি WhatsApp এ মেসেজ করুন।</p>
+      </div>
+      <a href="https://wa.me/8801864614704" target="_blank" class="btn btn-success" style="padding: 10px 20px;">
+        <i class="fab fa-whatsapp"></i> WhatsApp Chat
+      </a>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item active">
+        <div class="faq-question">
+          <span>What is SAFollow?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          SAFollow is Bangladesh's top-rated SMM reseller panel. We provide high-quality social media engagement services including Facebook Followers, Post Reactions, Instagram Followers, YouTube Views/Subscribers, TikTok Views and Telegram members at the lowest wholesale prices.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>How can I deposit money via bKash, Nagad or Rocket?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Log in to your account and click on <strong>Add Funds</strong>. Select bKash, Nagad, or Rocket. Send money to the provided Personal number, then enter the Transaction ID (TrxID) and the sender number. Once verified, your balance will be updated instantly.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Do you accept Binance Pay / Crypto payments?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Yes! We support Binance Pay (Pay ID) and USDT TRC20/BEP20. You can transfer funds directly and submit the transaction hash or Pay ID to have your account credited in USD automatically.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>What should I do if an order is stuck in "Pending"?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Most orders start processing within 0–15 minutes. During peak traffic or server updates, it may take slightly longer. If your order remains pending for more than 2 hours, open a Support Ticket or message us on WhatsApp with your Order ID.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Can I get a custom discount or wholesale rate for high volume?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Yes! If you are a high-volume agency or reseller spending more than $500/month, contact us via WhatsApp for custom pricing discounts and VIP API support.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>What is a Mass Order and how do I format it?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Mass Order allows you to place multiple orders simultaneously. Use the format <code>service_id|link|quantity</code> on each new line. For example:<br>
+          <code>2374|https://facebook.com/post/1|1000</code><br>
+          <code>2374|https://facebook.com/post/2|500</code>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">Welcome Back 👋</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Access your SMM dashboard and manage your orders.</p>
+      <div id="authErrorMsg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="authUsername" placeholder="Enter username" required>
+        </div>
+        <div class="form-group" id="authEmailGroup" style="display: none;">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="authEmail" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="authPassword" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 8px;">
+          Sign In to Dashboard
+        </button>
+        <div id="authSwitchText" style="text-align: center; margin-top: 16px; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="javascript:void(0)" onclick="openAuthModal('signup')">Register Free</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="footer-bottom">
+      <div>&copy; 2026 SAFollow V3.0. All Rights Reserved.</div>
+      <div>High-speed SMM reseller panel.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services List – SAFollow V3.0</title>
+  <meta name="description" content="Browse all 1,000+ SMM services available on SAFollow. Live rates, min/max limits and refill guarantees.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fas fa-rocket text-primary"></i>
+        <span>SAFollow</span>
+        <span class="brand-badge">V3.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services" class="active">Services</a></li>
+        <li><a href="/api-docs">API Docs</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" id="currencyToggleBtn">$ USD</button>
+        <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="section-wrapper">
+    <div class="section-header" style="margin-bottom: 30px;">
+      <div class="section-tag">Catalog</div>
+      <h1 class="section-title">All Social Media Marketing Services</h1>
+      <p class="section-subtitle">Real-time updated pricing, speed limits and refill conditions across all categories.</p>
+    </div>
+
+    <!-- Filters Bar -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+      <div style="flex: 1; min-width: 280px;">
+        <input type="text" class="form-control" id="serviceSearchInput" placeholder="🔍 Search services by name or ID (e.g. Facebook followers, 2374)...">
+      </div>
+
+      <div style="flex: 1; min-width: 280px;">
+        <select class="form-control" id="serviceCategoryFilter">
+          <option value="All">All Categories (1,034+ Services)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Services Table -->
+    <div class="table-container">
+      <table class="smm-table" id="servicesCatalogTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Service</th>
+            <th>Rate / 1K</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Avg Time</th>
+            <th>Refill</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="servicesListBody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <i class="fas fa-spinner fa-spin"></i> Loading services catalog...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Service Details Modal -->
+  <div class="modal-overlay" id="serviceDetailsModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeServiceDetailsModal()">&times;</button>
+      <span id="modalServiceBadge" class="brand-badge" style="margin-bottom: 8px; display: inline-block;">ID: 0</span>
+      <h3 id="modalServiceTitle" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 12px;">Service Details</h3>
+
+      <div style="background: var(--body-bg); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; font-size: 0.88rem;">
+        <div style="margin-bottom: 6px;"><strong>Rate:</strong> <span id="modalServiceRate" class="text-primary">$ 0.00</span> / 1,000</div>
+        <div style="margin-bottom: 6px;"><strong>Min Order:</strong> <span id="modalServiceMin">0</span></div>
+        <div style="margin-bottom: 6px;"><strong>Max Order:</strong> <span id="modalServiceMax">0</span></div>
+        <div><strong>Average Speed:</strong> <span id="modalServiceAvg">Instant</span></div>
+      </div>
+
+      <label class="form-label">Full Service Description</label>
+      <div id="modalServiceDesc" style="max-height: 200px; overflow-y: auto; background: var(--body-bg); padding: 12px; border-radius: var(--radius-sm); font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; color: var(--text-muted); margin-bottom: 20px;">
+        No special instructions.
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="openAuthModal('signup')">
+        <i class="fas fa-cart-plus"></i> Order This Service
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Contact -->
+  <div class="floating-widget">
+    <a href="https://wa.me/8801864614704" target="_blank" class="float-btn float-whatsapp" id="whatsappFloatLink">
+      <i class="fab fa-whatsapp"></i>
+      <div class="online-pulse"></div>
+    </a>
+    <a href="https://t.me/safollow_official" target="_blank" class="float-btn float-telegram" id="telegramFloatLink">
+      <i class="fab fa-telegram-plane"></i>
+    </a>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <h3 id="authModalTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">Welcome Back 👋</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px;">Access your SMM dashboard and manage your orders.</p>
+      <div id="authErrorMsg" style="display: none; background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="authUsername" placeholder="Enter username" required>
+        </div>
+        <div class="form-group" id="authEmailGroup" style="display: none;">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="authEmail" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="authPassword" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 8px;">
+          Sign In to Dashboard
+        </button>
+        <div id="authSwitchText" style="text-align: center; margin-top: 16px; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="javascript:void(0)" onclick="openAuthModal('signup')">Register Free</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="footer-bottom">
+      <div>&copy; 2026 SAFollow V3.0. All Rights Reserved.</div>
+      <div>High-speed SMM reseller panel.</div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let allServices = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchServicesList();
+
+      document.getElementById('serviceSearchInput').addEventListener('input', renderServicesTable);
+      document.getElementById('serviceCategoryFilter').addEventListener('change', renderServicesTable);
+    });
+
+    async function fetchServicesList() {
+      try {
+        const res = await fetch('/public-api/services');
+        allServices = await res.json();
+
+        // Populate Category Filter
+        const cats = [...new Set(allServices.map(s => s.category_name))];
+        const catSelect = document.getElementById('serviceCategoryFilter');
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          catSelect.appendChild(opt);
+        });
+
+        renderServicesTable();
+      } catch (err) {
+        document.getElementById('servicesListBody').innerHTML = `
+          <tr><td colspan="8" style="text-align:center; color: var(--danger); padding: 30px;">Failed to load services.</td></tr>
+        `;
+      }
+    }
+
+    function renderServicesTable() {
+      const tbody = document.getElementById('servicesListBody');
+      const search = document.getElementById('serviceSearchInput').value.toLowerCase().trim();
+      const cat = document.getElementById('serviceCategoryFilter').value;
+
+      let filtered = allServices;
+      if (cat !== 'All') {
+        filtered = filtered.filter(s => s.category_name === cat);
+      }
+      if (search) {
+        filtered = filtered.filter(s => 
+          s.name.toLowerCase().includes(search) || 
+          String(s.id).includes(search) ||
+          (s.desc && s.desc.toLowerCase().includes(search))
+        );
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">No services matched your search criteria.</td></tr>`;
+        return;
+      }
+
+      // Group by category if All is selected
+      let html = '';
+      let lastCat = '';
+
+      filtered.forEach(s => {
+        if (cat === 'All' && s.category_name !== lastCat) {
+          lastCat = s.category_name;
+          html += `
+            <tr style="background: var(--body-bg);">
+              <td colspan="8" style="font-weight: 700; color: var(--primary); padding: 12px 18px;">
+                <i class="fas fa-layer-group"></i> ${s.category_name}
+              </td>
+            </tr>
+          `;
+        }
+
+        html += `
+          <tr>
+            <td><strong>${s.id}</strong></td>
+            <td>
+              <div style="font-weight: 600;">${s.name}</div>
+            </td>
+            <td data-usd-rate="${s.rate}">${formatPrice(s.rate)}</td>
+            <td>${s.min.toLocaleString()}</td>
+            <td>${s.max.toLocaleString()}</td>
+            <td><span style="font-size: 0.85rem; color: var(--text-muted);">${s.avg_time || 'Instant'}</span></td>
+            <td>
+              ${s.refill ? '<span class="badge-refill">Refill</span>' : '<span class="badge-norefill">No Refill</span>'}
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-outline btn-sm" onclick="showServiceDetails(${s.id})" title="View Details">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">
+                  Order
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function showServiceDetails(serviceId) {
+      const s = allServices.find(item => item.id === serviceId);
+      if (!s) return;
+
+      document.getElementById('modalServiceBadge').textContent = `ID: ${s.id}`;
+      document.getElementById('modalServiceTitle').textContent = s.name;
+      document.getElementById('modalServiceRate').textContent = formatPrice(s.rate);
+      document.getElementById('modalServiceMin').textContent = s.min.toLocaleString();
+      document.getElementById('modalServiceMax').textContent = s.max.toLocaleString();
+      document.getElementById('modalServiceAvg').textContent = s.avg_time || 'Instant (0-5 minutes)';
+      document.getElementById('modalServiceDesc').textContent = s.desc || 'Guaranteed high-speed delivery. Please provide a public link without restrictions.';
+
+      document.getElementById('serviceDetailsModal').classList.add('active');
+    }
+
+    function closeServiceDetailsModal() {
+      document.getElementById('serviceDetailsModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>
