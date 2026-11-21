@@ -1,0 +1,18 @@
+{
+  "name": "@safollow/smm-sdk",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK for SAFollow SMM Panel API (v2)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "safollow",
+    "smm",
+    "smm-panel",
+    "smm-api",
+    "instagram-followers",
+    "youtube-views",
+    "reseller-api"
+  ],
+  "author": "SAFollow",
+  "license": "MIT"
+}
