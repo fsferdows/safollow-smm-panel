@@ -221,10 +221,68 @@ async function testAccountSession(botAccount) {
   }
 }
 
+/**
+ * Extract Media Shortcode or ID from Instagram URL
+ * @param {string} url 
+ * @returns {string}
+ */
+function extractMediaShortcode(url) {
+  if (!url) return '';
+  const match = url.match(/instagram\.com\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/i);
+  return match ? match[1] : '';
+}
+
+/**
+ * Reverse-Engineered Like Action
+ * Executes like on an Instagram post or media
+ * @param {Object} botAccount - Account from bot_accounts table
+ * @param {string|number} mediaId - Target Instagram media ID
+ * @returns {Promise<{ success: boolean, status: string, error?: string }>}
+ */
+async function likeMedia(botAccount, mediaId) {
+  if (!botAccount.session_id) {
+    return { success: false, status: 'error', error: 'Missing session_id for bot account' };
+  }
+
+  const cookieStr = buildCookieString(botAccount);
+  const csrf = botAccount.csrftoken || 'missing';
+
+  const headers = {
+    'User-Agent': DEFAULT_USER_AGENT,
+    'X-IG-App-ID': IG_APP_ID,
+    'X-CSRFToken': csrf,
+    'Cookie': cookieStr,
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Origin': 'https://www.instagram.com',
+    'Referer': 'https://www.instagram.com/'
+  };
+
+  const url = `https://www.instagram.com/api/v1/web/likes/${mediaId}/like/`;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers
+    });
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch (e) { json = {}; }
+
+    if (json.status === 'ok') {
+      return { success: true, status: 'liked' };
+    } else {
+      return { success: false, status: 'failed', error: json.message || 'Like action rejected' };
+    }
+  } catch (err) {
+    return { success: false, status: 'network_error', error: err.message };
+  }
+}
+
 module.exports = {
   extractUsername,
+  extractMediaShortcode,
   lookupUser,
   followUser,
+  likeMedia,
   testAccountSession,
   buildCookieString
 };

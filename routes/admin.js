@@ -509,8 +509,8 @@ router.get('/fulfillment-status', (req, res) => {
 
 router.post('/fulfillment-mode', (req, res) => {
   const { mode } = req.body;
-  if (!['live', 'simulation'].includes(mode)) {
-    return res.status(400).json({ error: 'Invalid mode. Must be "live" or "simulation"' });
+  if (!['smart', 'live', 'simulation'].includes(mode)) {
+    return res.status(400).json({ error: 'Invalid mode. Must be "smart", "live", or "simulation"' });
   }
 
   try {

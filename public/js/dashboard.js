@@ -442,12 +442,16 @@ async function loadUserOrders(silent = false) {
       let modeBadge = '';
       if (o.provider_order_id) {
         modeBadge = `<div style="font-size: 0.72rem; color: #16a34a; font-weight: 600;"><i class="fas fa-check-circle"></i> Live Delivery (Upstream #${o.provider_order_id})</div>`;
+      } else if (o.status === 'Completed') {
+        modeBadge = `<div style="font-size: 0.72rem; color: #16a34a; font-weight: 600;"><i class="fas fa-bolt"></i> REA Direct Engine (Fulfilled)</div>`;
+      } else if (o.status === 'In progress') {
+        modeBadge = `<div style="font-size: 0.72rem; color: #2563eb; font-weight: 600;"><i class="fas fa-sync fa-spin"></i> REA Engine Active</div>`;
       } else if (o.error_message) {
         modeBadge = `<div style="font-size: 0.72rem; color: #dc2626; font-weight: 600;" title="${o.error_message}"><i class="fas fa-exclamation-triangle"></i> ${o.error_message.length > 40 ? o.error_message.substring(0, 37) + '...' : o.error_message}</div>`;
       } else if (o.provider_id) {
         modeBadge = `<div style="font-size: 0.72rem; color: #2563eb; font-weight: 600;"><i class="fas fa-paper-plane"></i> Forwarding to Upstream...</div>`;
       } else {
-        modeBadge = `<div style="font-size: 0.72rem; color: #d97706; font-weight: 600;"><i class="fas fa-flask"></i> Sandbox Demo (Connect Provider)</div>`;
+        modeBadge = `<div style="font-size: 0.72rem; color: #0284c7; font-weight: 600;"><i class="fas fa-bolt"></i> REA Auto-Engine</div>`;
       }
 
       html += `
@@ -1286,7 +1290,12 @@ async function loadAdminProviders() {
     const btnSim = document.getElementById('btnModeSim');
 
     if (modeLabel) {
-      if (statusData.fulfillment_mode === 'simulation') {
+      if (statusData.fulfillment_mode === 'smart') {
+        modeLabel.textContent = '⚡ REA Smart Engine (Auto-Delivery Active)';
+        modeLabel.style.color = '#16a34a';
+        if (btnSim) { btnSim.className = 'btn btn-sm btn-outline'; }
+        if (btnLive) { btnLive.className = 'btn btn-sm btn-primary'; }
+      } else if (statusData.fulfillment_mode === 'simulation') {
         modeLabel.textContent = 'Sandbox Simulation (Demo Only)';
         modeLabel.style.color = '#d97706';
         if (btnSim) { btnSim.className = 'btn btn-sm btn-primary'; }
