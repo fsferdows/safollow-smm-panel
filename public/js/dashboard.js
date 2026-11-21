@@ -1447,6 +1447,9 @@ function applyProviderPreset(preset) {
   if (preset === 'safollow') {
     nameInput.value = 'SAFollow Official API';
     urlInput.value = 'https://www.safollow.com/api/v2';
+  } else if (preset === 'ezkify') {
+    nameInput.value = 'Ezkify Global API';
+    urlInput.value = 'https://ezkify.com/api/v2';
   } else if (preset === 'jap') {
     nameInput.value = 'JustAnotherPanel';
     urlInput.value = 'https://justanotherpanel.com/api/v2';
