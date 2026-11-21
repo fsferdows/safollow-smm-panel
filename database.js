@@ -112,7 +112,8 @@ function initDb() {
       api_key TEXT NOT NULL,
       status TEXT DEFAULT 'active',
       balance REAL DEFAULT 0.0,
-      currency TEXT DEFAULT 'USD'
+      currency TEXT DEFAULT 'USD',
+      priority INTEGER DEFAULT 1
     );
 
     CREATE TABLE IF NOT EXISTS bot_accounts (
@@ -140,6 +141,9 @@ function initDb() {
   // Migration checks
   try {
     db.prepare('ALTER TABLE orders ADD COLUMN error_message TEXT DEFAULT NULL').run();
+  } catch (e) {}
+  try {
+    db.prepare('ALTER TABLE providers ADD COLUMN priority INTEGER DEFAULT 1').run();
   } catch (e) {}
 
   // Default Settings

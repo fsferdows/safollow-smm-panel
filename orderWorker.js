@@ -1,5 +1,5 @@
 const db = require('./database');
-const { forwardOrder, syncOrderStatus } = require('./providerService');
+const { forwardOrder, forwardOrderWithFailover, syncOrderStatus } = require('./providerService');
 const { fulfillOrderDirect } = require('./engine/directFulfillment');
 const { getAvailableAccounts } = require('./engine/accountManager');
 
@@ -37,9 +37,7 @@ async function processOrders() {
       // 2. Order has provider_id BUT not yet forwarded (no provider_order_id)
       if (order.provider_id && !order.provider_order_id) {
         try {
-          const service = db.prepare('SELECT provider_service_id FROM services WHERE id = ?').get(order.service_id);
-          const provSvcId = (service && service.provider_service_id) ? service.provider_service_id : order.service_id;
-          await forwardOrder(order.id, order.provider_id, provSvcId, order.link, order.quantity);
+          await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity, order.provider_id);
         } catch (e) {
           console.error(`Forward provider error for order #${order.id}:`, e.message);
         }
@@ -63,15 +61,12 @@ async function processOrders() {
       }
 
       // 4. Order has NO provider_id set:
-      // If there IS an active upstream provider configured, automatically attach it and forward!
+      // If there IS an active upstream provider configured, automatically dispatch via failover queue!
       if (!order.provider_id && defaultProvider) {
         try {
-          const service = db.prepare('SELECT provider_service_id FROM services WHERE id = ?').get(order.service_id);
-          const provSvcId = (service && service.provider_service_id) ? service.provider_service_id : order.service_id;
-          db.prepare('UPDATE orders SET provider_id = ? WHERE id = ?').run(defaultProvider.id, order.id);
-          await forwardOrder(order.id, defaultProvider.id, provSvcId, order.link, order.quantity);
+          await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity);
         } catch (e) {
-          console.error(`Auto-bind provider error for order #${order.id}:`, e.message);
+          console.error(`Failover auto-dispatch error for order #${order.id}:`, e.message);
         }
         continue;
       }

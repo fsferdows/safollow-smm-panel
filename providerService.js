@@ -1,3 +1,8 @@
+/**
+ * Production Multi-Provider Integration & Automated Failover Engine
+ * Dispatches orders across upstream providers with automatic priority failover and balance syncing.
+ */
+
 const db = require('./database');
 
 function cleanUrl(url) {
@@ -34,64 +39,108 @@ async function callProviderApi(apiUrl, data) {
   }
 }
 
-async function forwardOrder(orderId, providerId, providerServiceId, link, quantity) {
-  const provider = db.prepare("SELECT * FROM providers WHERE id = ? AND status = 'active'").get(providerId);
-  if (!provider) {
-    console.warn(`Provider ${providerId} not found or inactive`);
+/**
+ * Forward order with automatic multi-provider failover
+ * If the primary provider fails (e.g. out of funds or offline), automatically retries with secondary providers.
+ * @param {number} orderId 
+ * @param {number} serviceId 
+ * @param {string} link 
+ * @param {number} quantity 
+ * @param {number} [preferredProviderId=null]
+ * @returns {Promise<number|null>} - Returns upstream order ID if any provider succeeded
+ */
+async function forwardOrderWithFailover(orderId, serviceId, link, quantity, preferredProviderId = null) {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+  if (!order) return null;
+
+  // Retrieve active providers ordered by priority (1 = Highest Priority)
+  const providers = db.prepare(`
+    SELECT * FROM providers 
+    WHERE status = 'active' AND length(api_key) > 5
+    ORDER BY priority ASC, id ASC
+  `).all();
+
+  if (providers.length === 0) {
+    console.warn(`[Failover] Order #${orderId} cannot be fulfilled: No active providers with valid API keys`);
     return null;
   }
 
-  if (!provider.api_key || provider.api_key.trim().length < 5) {
-    const errText = `Provider "${provider.name}" has no valid API key configured.`;
-    console.warn(`[Provider] Order #${orderId} aborted: ${errText}`);
-    db.prepare("UPDATE orders SET error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-      .run(errText, orderId);
-    return null;
-  }
-
-  const result = await callProviderApi(provider.api_url, {
-    key: provider.api_key.trim(),
-    action: 'add',
-    service: providerServiceId,
-    link: link.trim(),
-    quantity: quantity
-  });
-
-  if (result && result.order) {
-    db.prepare(`
-      UPDATE orders 
-      SET provider_order_id = ?, status = 'In progress', error_message = NULL, updated_at = CURRENT_TIMESTAMP 
-      WHERE id = ?
-    `).run(result.order, orderId);
-    console.log(`[Provider] Order #${orderId} forwarded to ${provider.name} (Upstream #${result.order})`);
-    return result.order;
-  } else {
-    const errorMsg = (result && result.error) ? result.error : 'Upstream order rejected or failed';
-    console.warn(`[Provider] Upstream order #${orderId} failed:`, errorMsg);
-
-    // Cancel order and refund user balance automatically so funds are never lost
-    const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
-    if (order && order.status !== 'Canceled') {
-      const cancelTx = db.transaction(() => {
-        db.prepare(`
-          UPDATE orders 
-          SET status = 'Canceled', error_message = ?, updated_at = CURRENT_TIMESTAMP 
-          WHERE id = ?
-        `).run(`Provider rejected: ${errorMsg}`, orderId);
-
-        db.prepare(`
-          UPDATE users 
-          SET balance = balance + ?, spent = spent - ? 
-          WHERE id = ?
-        `).run(order.charge, order.charge, order.user_id);
-      });
-      cancelTx();
-      console.log(`[Provider] Order #${orderId} canceled and $${order.charge.toFixed(4)} refunded to user #${order.user_id}`);
+  // If a preferred provider was requested, prioritize it first
+  let targetQueue = [...providers];
+  if (preferredProviderId) {
+    const preferred = providers.find(p => p.id === preferredProviderId);
+    if (preferred) {
+      targetQueue = [preferred, ...providers.filter(p => p.id !== preferredProviderId)];
     }
-    return null;
   }
+
+  let lastError = 'No response';
+  const service = db.prepare('SELECT * FROM services WHERE id = ?').get(serviceId);
+
+  for (const provider of targetQueue) {
+    const provSvcId = (service && service.provider_service_id) ? service.provider_service_id : serviceId;
+
+    console.log(`[Failover] Attempting dispatch for Order #${orderId} via Provider #${provider.id} (${provider.name})...`);
+
+    const result = await callProviderApi(provider.api_url, {
+      key: provider.api_key.trim(),
+      action: 'add',
+      service: provSvcId,
+      link: link.trim(),
+      quantity: quantity
+    });
+
+    if (result && result.order) {
+      db.prepare(`
+        UPDATE orders 
+        SET provider_id = ?, provider_order_id = ?, status = 'In progress', error_message = NULL, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+      `).run(provider.id, result.order, orderId);
+
+      console.log(`[Failover] ✅ Order #${orderId} successfully accepted by Provider #${provider.id} (${provider.name}) -> Upstream Order #${result.order}`);
+      return result.order;
+    } else {
+      lastError = (result && result.error) ? result.error : 'Rejected or connection error';
+      console.warn(`[Failover] ⚠️ Provider #${provider.id} (${provider.name}) failed: ${lastError}. Trying next available provider...`);
+    }
+  }
+
+  // If all providers in the queue failed, cancel order and refund user
+  console.error(`[Failover] ❌ All ${targetQueue.length} providers failed for Order #${orderId}. Last error: ${lastError}`);
+
+  if (order.status !== 'Canceled') {
+    const cancelTx = db.transaction(() => {
+      db.prepare(`
+        UPDATE orders 
+        SET status = 'Canceled', error_message = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+      `).run(`All providers failed: ${lastError}`, orderId);
+
+      db.prepare(`
+        UPDATE users 
+        SET balance = balance + ?, spent = spent - ? 
+        WHERE id = ?
+      `).run(order.charge, order.charge, order.user_id);
+    });
+    cancelTx();
+    console.log(`[Failover] Order #${orderId} canceled and $${order.charge.toFixed(4)} refunded to user #${order.user_id}`);
+  }
+
+  return null;
 }
 
+/**
+ * Standard single provider forward (delegates to failover engine)
+ */
+async function forwardOrder(orderId, providerId, providerServiceId, link, quantity) {
+  const service = db.prepare('SELECT service_id FROM orders WHERE id = ?').get(orderId);
+  const svcId = service ? service.service_id : providerServiceId;
+  return forwardOrderWithFailover(orderId, svcId, link, quantity, providerId);
+}
+
+/**
+ * Sync order status from upstream provider
+ */
 async function syncOrderStatus(orderId) {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   if (!order || !order.provider_id || !order.provider_order_id) return null;
@@ -152,5 +201,6 @@ module.exports = {
   cleanUrl,
   callProviderApi,
   forwardOrder,
+  forwardOrderWithFailover,
   syncOrderStatus
 };
