@@ -251,7 +251,8 @@ async function handleAuthSubmit(e) {
     // Success -> redirect to dashboard
     window.location.href = '/dashboard';
   } catch (err) {
-    errorEl.textContent = 'Network error. Please try again.';
+    console.error('Login error:', err);
+    errorEl.textContent = 'Connection error. Please ensure the server is running on port 3001.';
     errorEl.style.display = 'block';
   }
 }

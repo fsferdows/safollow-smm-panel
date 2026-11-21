@@ -85,13 +85,20 @@ function switchView(viewName) {
   }
 }
 
+let activePollInterval = null;
+
 function handleViewActivation(viewName) {
+  if (activePollInterval) {
+    clearInterval(activePollInterval);
+    activePollInterval = null;
+  }
+
   switch (viewName) {
     case 'new-order':
-      // Reset or refresh if needed
       break;
     case 'orders':
       loadUserOrders();
+      activePollInterval = setInterval(() => loadUserOrders(true), 4000);
       break;
     case 'services':
       loadDashboardServices();
@@ -384,10 +391,12 @@ async function submitMassOrder() {
 // -------------------------------------------------------------
 let orderFilterStatus = 'all';
 
-async function loadUserOrders() {
+async function loadUserOrders(silent = false) {
   const tbody = document.getElementById('userOrdersTableBody');
   const search = document.getElementById('orderSearchInput') ? document.getElementById('orderSearchInput').value.trim() : '';
-  tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">Loading orders...</td></tr>';
+  if (!silent) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">Loading orders...</td></tr>';
+  }
 
   // Setup tab clicks once
   document.querySelectorAll('#orderStatusTabs .tab-btn').forEach(btn => {

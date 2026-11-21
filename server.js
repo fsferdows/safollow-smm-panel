@@ -13,6 +13,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -121,6 +127,8 @@ app.get('/signup', (req, res) => {
   res.redirect('/dashboard#signup');
 });
 
+const { startOrderWorker } = require('./orderWorker');
+
 // Start Server
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -131,6 +139,7 @@ if (require.main === module) {
     console.log(`  ✦ Default Admin Login: admin / admin123`);
     console.log(`  ✦ Default Demo User: demo / demo123 (Balance: $50.00)`);
     console.log(`=======================================================`);
+    startOrderWorker();
   });
 }
 
