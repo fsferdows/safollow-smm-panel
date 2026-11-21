@@ -90,6 +90,7 @@ const adminRouter = require('./routes/admin');
 
 app.use('/auth', authRouter);
 app.use('/api/v2', apiV2Router);
+app.use('/api/v1', apiV2Router); // SMM API v1 alias
 app.use('/api', apiV2Router); // SMM panel alias
 app.use('/user', userRouter);
 app.use('/admin', adminRouter);

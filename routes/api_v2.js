@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { forwardOrder } = require('../providerService');
+const { forwardOrderWithFailover } = require('../providerService');
 
-router.post('/', async (req, res) => {
-  const { key, action } = req.body;
+router.all('/', async (req, res) => {
+  const params = { ...req.query, ...req.body };
+  const { key, action } = params;
 
   if (!key) {
     return res.status(400).json({ error: 'apiKey is not specified. action is not specified.' });
   }
 
-  const user = db.prepare("SELECT * FROM users WHERE api_key = ? AND status = 'active'").get(key);
+  const user = db.prepare("SELECT * FROM users WHERE api_key = ? AND status = 'active'").get(key.trim());
   if (!user) {
     return res.status(400).json({ error: 'incorrect API key or user disabled' });
   }
@@ -49,13 +50,17 @@ router.post('/', async (req, res) => {
     }
 
     case 'add': {
-      const { service: serviceId, link, quantity } = req.body;
+      const { service: serviceId, link, quantity, comments, runs, interval } = params;
 
-      if (!serviceId || !link || !quantity) {
+      let qty = parseInt(quantity, 10);
+      if ((isNaN(qty) || qty <= 0) && comments) {
+        qty = String(comments).trim().split('\n').filter(Boolean).length;
+      }
+
+      if (!serviceId || !link || !qty) {
         return res.status(400).json({ error: 'Missing required parameters: service, link, quantity' });
       }
 
-      const qty = parseInt(quantity, 10);
       if (isNaN(qty) || qty <= 0) {
         return res.status(400).json({ error: 'Invalid quantity' });
       }
@@ -87,25 +92,23 @@ router.post('/', async (req, res) => {
           INSERT INTO orders 
           (user_id, service_id, service_name, category_name, link, quantity, charge, remains, status, provider_id)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
-        `).run(user.id, s.id, s.name, s.category_name, link.trim(), qty, charge, qty, s.provider_id);
+        `).run(user.id, s.id, s.name, s.category_name, String(link).trim(), qty, charge, qty, s.provider_id);
 
         return orderResult.lastInsertRowid;
       });
 
       const orderId = placeTx();
 
-      // If tied to an upstream provider, forward asynchronously
-      if (s.provider_id && s.provider_service_id) {
-        forwardOrder(orderId, s.provider_id, s.provider_service_id, link.trim(), qty).catch(err => {
-          console.error('Async forward order error:', err);
-        });
-      }
+      // Async forward with automatic failover
+      forwardOrderWithFailover(orderId, s.id, String(link).trim(), qty, s.provider_id).catch(err => {
+        console.error('Async failover dispatch error:', err);
+      });
 
       return res.json({ order: orderId });
     }
 
     case 'status': {
-      const { order, orders } = req.body;
+      const { order, orders } = params;
 
       // Multiple orders status
       if (orders) {
@@ -162,7 +165,7 @@ router.post('/', async (req, res) => {
     }
 
     case 'refill': {
-      const { order } = req.body;
+      const { order } = params;
       if (!order) return res.status(400).json({ error: 'Missing parameter: order' });
 
       const ord = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(order, user.id);
@@ -173,7 +176,7 @@ router.post('/', async (req, res) => {
     }
 
     case 'refill_status': {
-      const { refill } = req.body;
+      const { refill } = params;
       if (!refill) return res.status(400).json({ error: 'Missing parameter: refill' });
 
       const ord = db.prepare('SELECT refill_status FROM orders WHERE id = ? AND user_id = ?').get(refill, user.id);
