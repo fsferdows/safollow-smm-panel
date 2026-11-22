@@ -1468,6 +1468,12 @@ function applyProviderPreset(preset) {
   } else if (preset === 'peakerr') {
     nameInput.value = 'Peakerr SMM';
     urlInput.value = 'https://peakerr.com/api/v2';
+  } else if (preset === 'neofollower') {
+    nameInput.value = 'NeoFollower API';
+    urlInput.value = 'https://panel.neofollower.com/api/v1';
+  } else if (preset === 'followersmore') {
+    nameInput.value = 'FollowersMore Global';
+    urlInput.value = 'https://followersmore.com/api/v2';
   } else if (preset === 'custom') {
     nameInput.value = '';
     urlInput.value = 'https://';
