@@ -2,3 +2,4 @@ node_modules/
 safollow.db-shm
 safollow.db-wal
 .DS_Store
+rust_engine/target/
