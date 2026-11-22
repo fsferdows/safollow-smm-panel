@@ -13,6 +13,29 @@ function cleanUrl(url) {
   return cleaned;
 }
 
+function mapToEzkifyServiceId(service) {
+  if (!service) return 13058;
+  const name = (service.name || '').toLowerCase();
+  const cat = (service.category_name || '').toLowerCase();
+
+  if (cat.includes('view') || name.includes('view')) {
+    return 13101; // Ezkify Instagram Views
+  }
+  if (cat.includes('like') || name.includes('like')) {
+    return 13012; // Ezkify Instagram Likes
+  }
+  if (cat.includes('follower') || name.includes('follower')) {
+    return 13058; // Ezkify Instagram Followers
+  }
+  if (cat.includes('youtube') && (cat.includes('sub') || name.includes('sub'))) {
+    return 13150; // Youtube Subscribers
+  }
+  if (cat.includes('youtube')) {
+    return 13101; // Youtube Views
+  }
+  return 13058;
+}
+
 async function callProviderApi(apiUrl, data) {
   try {
     const url = cleanUrl(apiUrl);
@@ -78,9 +101,16 @@ async function forwardOrderWithFailover(orderId, serviceId, link, quantity, pref
   const service = db.prepare('SELECT * FROM services WHERE id = ?').get(serviceId);
 
   for (const provider of targetQueue) {
-    const provSvcId = (service && service.provider_service_id) ? service.provider_service_id : serviceId;
+    let provSvcId = (service && service.provider_service_id) ? service.provider_service_id : serviceId;
 
-    console.log(`[Failover] Attempting dispatch for Order #${orderId} via Provider #${provider.id} (${provider.name})...`);
+    // Intelligent provider ID translation:
+    // If forwarding to Ezkify and the service ID is a SAFollow ID (< 10000), translate to Ezkify's actual service ID!
+    if (provider.api_url && provider.api_url.includes('ezkify.com') && provSvcId < 10000) {
+      provSvcId = mapToEzkifyServiceId(service);
+      console.log(`[Failover] Translated service #${serviceId} to Ezkify service #${provSvcId}`);
+    }
+
+    console.log(`[Failover] Attempting dispatch for Order #${orderId} via Provider #${provider.id} (${provider.name}) with service #${provSvcId}...`);
 
     const result = await callProviderApi(provider.api_url, {
       key: provider.api_key.trim(),
@@ -105,8 +135,21 @@ async function forwardOrderWithFailover(orderId, serviceId, link, quantity, pref
     }
   }
 
-  // If all providers in the queue failed, cancel order and refund user
-  console.error(`[Failover] ❌ All ${targetQueue.length} providers failed for Order #${orderId}. Last error: ${lastError}`);
+  // If all providers failed:
+  console.warn(`[Failover] ⚠️ All ${targetQueue.length} providers failed for Order #${orderId}. Last error: ${lastError}`);
+
+  const modeSetting = db.prepare("SELECT value FROM settings WHERE key = 'fulfillment_mode'").get();
+  const fulfillmentMode = modeSetting ? modeSetting.value : 'smart';
+
+  if (fulfillmentMode === 'smart') {
+    console.log(`[Failover] Gracefully falling back to REA Smart Engine for Order #${orderId} (Upstream error: ${lastError})`);
+    db.prepare(`
+      UPDATE orders 
+      SET provider_id = NULL, error_message = NULL, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `).run(orderId);
+    return null;
+  }
 
   if (order.status !== 'Canceled') {
     const cancelTx = db.transaction(() => {

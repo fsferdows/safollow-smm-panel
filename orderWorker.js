@@ -37,12 +37,15 @@ async function processOrders() {
 
       // 2. Order has provider_id BUT not yet forwarded (no provider_order_id)
       if (order.provider_id && !order.provider_order_id) {
+        let fwdId = null;
         try {
-          await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity, order.provider_id);
+          fwdId = await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity, order.provider_id);
         } catch (e) {
           console.error(`Forward provider error for order #${order.id}:`, e.message);
         }
-        continue;
+        if (fwdId) continue;
+        // If upstream failed and mode is smart, fall through to REA Smart Engine!
+        if (fulfillmentMode !== 'smart') continue;
       }
 
       // 3. Direct Internal Bot Farm Check:
@@ -64,12 +67,14 @@ async function processOrders() {
       // 4. Order has NO provider_id set:
       // If there IS an active upstream provider configured, automatically dispatch via failover queue!
       if (!order.provider_id && defaultProvider) {
+        let fwdId = null;
         try {
-          await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity);
+          fwdId = await forwardOrderWithFailover(order.id, order.service_id, order.link, order.quantity);
         } catch (e) {
           console.error(`Failover auto-dispatch error for order #${order.id}:`, e.message);
         }
-        continue;
+        if (fwdId) continue;
+        if (fulfillmentMode !== 'smart') continue;
       }
 
       // 5. Strict Live Mode Check:
