@@ -6,7 +6,13 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test.js && node test_extra.js"
+    "test": "node test.js && node test_extra.js",
+    "mcp": "cd mcp_server && node dist/adapters/inbound/mcp/server.js",
+    "mcp:gateway": "cd mcp_server && node dist/adapters/inbound/gateway.js",
+    "mcp:build": "cd mcp_server && npm run build",
+    "mcp:test": "cd mcp_server && npm test",
+    "rust:build": "cd rust_engine && cargo build --release",
+    "rust:gateway": "./rust_engine/target/release/universal-smm-gateway serve --port 3002"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

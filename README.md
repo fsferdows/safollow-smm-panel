@@ -31,19 +31,26 @@ Whether you want to connect to global wholesale SMM providers (Ezkify, JustAnoth
 
 ```
                                   ┌────────────────────────────────────────────────────────┐
-                                  │           Your Customers & API Clients                 │
-                                  │      (Web Dashboard, Child Panels, PHP/Python SDK)     │
-                                  └──────────────────────────┬─────────────────────────────┘
-                                                             │
-                                                             ▼
-                                  ┌────────────────────────────────────────────────────────┐
-                                  │       ⚡ SAFollow Core Gateway & Universal API v2       │
-                                  │           (Node.js + SQLite WAL + Express.js)          │
-                                  └──────────┬─────────────────────────────────┬───────────┘
-                                             │                                 │
-                 ┌───────────────────────────┴──────────┐   ┌──────────────────┴───────────┐
-                 │                                      │   │                              │
-                 ▼                                      ▼   ▼                              ▼
+                                  │               Clients, Agents & Resellers              │
+                                  │   (Web Dashboard • Claude Desktop • Cursor • REST API)  │
+                                  └───────────────┬──────────────────────────┬─────────────┘
+                                                  │                          │
+                                                  ▼                          ▼
+                               ┌─────────────────────────────┐  ┌───────────────────────────┐
+                               │ 🤖 OpenSMM MCP Server       │  │ 🦀 Rust Universal Gateway │
+                               │ (Model Context Protocol     │  │ (Axum + Tokio Async SMM   │
+                               │  stdio & HTTP on Port 3100) │  │  Engine on Port 3002)     │
+                               └───────────────┬─────────────┘  └─────────────┬─────────────┘
+                                               │                              │
+                                               ▼                              ▼
+                               ┌────────────────────────────────────────────────────────────┐
+                               │        ⚡ SAFollow Core Gateway & Universal API v2          │
+                               │            (Node.js + SQLite WAL + Express.js)             │
+                               └───────────┬──────────────────────────────────┬─────────────┘
+                                           │                                  │
+               ┌───────────────────────────┴───────────┐   ┌──────────────────┴─────────────┐
+               │                                       │   │                                │
+               ▼                                       ▼   ▼                                ▼
 ┌─────────────────────────────────┐   ┌───────────────────────────────────┐  ┌─────────────────────────────────┐
 │  🤖 Reverse-Engineered Engine   │   │  🌐 Multi-Provider Failover Router│  │  💳 Native Payment Gateways     │
 │  - Instagram Private Web Client │   │  - Auto-Priority Dispatch (1..N)  │  │  - bKash (Personal/Send Money) │
@@ -53,6 +60,8 @@ Whether you want to connect to global wholesale SMM providers (Ezkify, JustAnoth
 ```
 
 ### 💎 What's Inside:
+* **🤖 Native Model Context Protocol (MCP) Server**: Fully integrated with the open [OpenSMM Protocol](https://github.com/opensmm-protocol/mcp-server). Allows autonomous AI agents (Claude, Cursor, Antigravity, OpenAI) to discover, quote, and execute SMM orders programmatically.
+* **🦀 High-Performance Native Rust Gateway**: Tokio & Axum asynchronous engine (`rust_engine/`) delivering sub-millisecond API response times and ultra-low memory footprint.
 * **Universal SMM API v2**: 100% compatible with SmartPanel, PerfectPanel, and RentalPanel child panels (`/api/v2`, `/api/v1`, `/api`).
 * **🤖 Reverse-Engineered Private Instagram Client**: Live lookup of internal User IDs (`pk`) and start counts, friendship creation (`/api/v1/friendships/create/`), and media likes (`/api/v1/web/likes/`).
 * **🛡️ Smart Multi-Provider Failover**: Routes orders dynamically across priority wholesale APIs with automated retries and auto-refunds.
@@ -110,6 +119,72 @@ The built-in API allows child panels, agencies, and scripts to place orders, che
 | `refill` | `key`, `order` or `orders` | Triggers automated 30-day refill |
 | `refill_status` | `key`, `refill` or `refills` | Queries live status of refill requests |
 | `cancel` | `key`, `orders=1,2,3` | Cancels pending orders and refunds wallet balance automatically |
+
+---
+
+## 🤖 Model Context Protocol (MCP) Server for AI Agents
+
+SAFollow includes a native, full-featured **Model Context Protocol (MCP)** server built upon the open [OpenSMM Protocol](https://github.com/opensmm-protocol/mcp-server). This allows LLM-based autonomous AI agents (Claude, Cursor, Antigravity, OpenAI Assistants, LangChain) to discover, quote, order, and monitor social media marketing growth services.
+
+### Registered MCP Tools
+
+| MCP Tool | Type | Description |
+|---|---|---|
+| `search_services` | Read | Search catalog by keyword, platform (Instagram, Telegram, etc.), or objective |
+| `compare_offers` | Read | Compare multiple provider offers, unit prices, and gateway-measured quality |
+| `get_service` | Read | Get detailed specs: rate, min/max limits, refill and cancellation flags |
+| `get_quote` | Read | Generates a cryptographically idempotent quote with guaranteed pricing |
+| `create_order` | Action | Executes an order from a valid quote with full idempotency protection |
+| `get_order_status` | Read | Polls live order execution progress, start counts, and remaining amounts |
+| `cancel_order` | Action | Cancels in-flight orders with automatic wallet/escrow refund |
+| `request_refill` | Action | Triggers guaranteed 30-day refills for eligible completed orders |
+| `list_providers` | Read | Lists active upstream providers with gateway-measured reliability metrics |
+
+### Connecting to Claude Desktop / Cursor
+
+Add the following to your `claude_desktop_config.json` or `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "safollow-smm": {
+      "command": "node",
+      "args": ["/absolute/path/to/safollow/mcp_server/dist/adapters/inbound/mcp/server.js"],
+      "env": {
+        "OPENSMM_SMM_V2_BASE_URL": "http://localhost:3001/api/v2",
+        "OPENSMM_SMM_V2_API_KEY": "YOUR_ADMIN_API_KEY",
+        "OPENSMM_ALLOW_PRIVATE_ENDPOINTS": "1"
+      }
+    }
+  }
+}
+```
+
+### Running the MCP Gateway
+```bash
+# 1. Run MCP server over stdio for LLMs:
+npm run mcp
+
+# 2. Run combined REST (/v0) + MCP Streamable HTTP (/mcp) Gateway on Port 3100:
+npm run mcp:gateway
+```
+
+---
+
+## 🦀 High-Performance Native Rust Gateway (`rust_engine/`)
+
+Inspired by high-throughput system programming principles, SAFollow includes a native **Rust Gateway** in [`rust_engine/`](./rust_engine) built with **Tokio**, **Axum**, and **Reqwest**.
+
+* **Sub-Millisecond Latency**: Serves `/api/v2` actions (`balance`, `services`, `add`, `status`) at native speeds with negligible RAM overhead.
+* **Resilient Failover**: Handles async HTTP dispatch to upstream wholesale APIs concurrently.
+
+```bash
+# Build release binary
+npm run rust:build
+
+# Launch the Rust Gateway daemon on Port 3002
+npm run rust:gateway
+```
 
 ---
 

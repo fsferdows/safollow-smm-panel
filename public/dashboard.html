@@ -486,6 +486,36 @@
           <a href="/api-docs" target="_blank" class="btn btn-outline btn-sm">
             <i class="fas fa-external-link-alt"></i> View Full API v2 Documentation
           </a>
+
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
+
+          <h4 style="font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-robot" style="color: var(--primary);"></i> OpenSMM Model Context Protocol (MCP) for AI Agents
+          </h4>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px;">
+            SAFollow supports the open <strong>OpenSMM Protocol</strong>, enabling Claude Desktop, Cursor, and AI agents to query services, receive quotes, and execute social media orders programmatically via MCP.
+          </p>
+          <div style="background: #0f172a; color: #38bdf8; padding: 14px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.82rem; margin-bottom: 14px; white-space: pre-wrap; line-height: 1.5; overflow-x: auto;">{
+  "mcpServers": {
+    "safollow-smm": {
+      "command": "node",
+      "args": ["mcp_server/dist/adapters/inbound/mcp/server.js"],
+      "env": {
+        "OPENSMM_SMM_V2_BASE_URL": "http://localhost:3001/api/v2",
+        "OPENSMM_SMM_V2_API_KEY": "YOUR_PERSONAL_API_KEY",
+        "OPENSMM_ALLOW_PRIVATE_ENDPOINTS": "1"
+      }
+    }
+  }
+}</div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="https://github.com/opensmm-protocol/mcp-server" target="_blank" class="btn btn-outline btn-sm">
+              <i class="fab fa-github"></i> OpenSMM Protocol
+            </a>
+            <span class="badge" style="background: #ecfdf5; color: #065f46; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+              <i class="fas fa-check-circle"></i> 11 MCP Tools Ready
+            </span>
+          </div>
         </div>
       </section>
 

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "safollow-smm": {
+      "command": "node",
+      "args": ["mcp_server/dist/adapters/inbound/mcp/server.js"],
+      "env": {
+        "OPENSMM_SMM_V2_BASE_URL": "http://localhost:3001/api/v2",
+        "OPENSMM_SMM_V2_API_KEY": "YOUR_ADMIN_API_KEY",
+        "OPENSMM_ALLOW_PRIVATE_ENDPOINTS": "1"
+      }
+    }
+  }
+}

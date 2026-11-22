@@ -1,0 +1,83 @@
+{
+  "name": "@opensmm/mcp-server",
+  "version": "0.1.1",
+  "mcpName": "io.github.opensmm-protocol/mcp-server",
+  "description": "OpenSMM Protocol — open MCP server and REST gateway for ordering social media growth services (SMM) via AI agents. Provider-neutral, idempotent, x402/USDC-Base direct settlement.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "ai-agents",
+    "open-protocol",
+    "llm-tools",
+    "agent-economy",
+    "smm",
+    "social-media-marketing",
+    "social-media-api",
+    "telegram-api",
+    "instagram-api",
+    "x402",
+    "usdc",
+    "base",
+    "micropayments",
+    "typescript"
+  ],
+  "homepage": "https://opensmm.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opensmm-protocol/mcp-server.git"
+  },
+  "bugs": "https://github.com/opensmm-protocol/mcp-server/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src",
+    "spec",
+    "docs",
+    "llms.txt",
+    "server.json",
+    "README.md",
+    ".env.example",
+    "LICENSE"
+  ],
+  "bin": {
+    "opensmm": "./bin/opensmm.mjs"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "rest": "node --env-file-if-exists=.env src/adapters/inbound/rest/server.ts",
+    "mcp": "node --env-file-if-exists=.env src/adapters/inbound/mcp/server.ts",
+    "mcp:http": "node --env-file-if-exists=.env src/adapters/inbound/mcp/http.ts",
+    "gateway": "node --env-file-if-exists=.env src/adapters/inbound/gateway.ts",
+    "census": "node scripts/node-census.mjs",
+    "doctor": "node src/cli/provider-doctor.ts",
+    "verify:node": "node scripts/verify-node.mjs",
+    "x402:testnet": "node --env-file-if-exists=.env scripts/x402-testnet-run.ts",
+    "manifests:sync": "node scripts/sync-manifests.mjs",
+    "manifests:check": "node scripts/sync-manifests.mjs --check",
+    "validate:manifest": "node scripts/validate-server-manifest.mjs",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run manifests:check && npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "typescript": "^5.9.3",
+    "viem": "^2.57.16"
+  }
+}

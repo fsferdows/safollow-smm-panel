@@ -1,0 +1,76 @@
+# OpenSMM Protocol
+
+> Open, provider-neutral protocol for ordering and executing social media
+> growth services by AI agents. MCP is one transport; REST /v0 is the
+> canonical HTTP binding. Gateways route and measure — with direct settlement
+> (x402, USDC on Base) money flows agent → provider and never transits the
+> gateway.
+
+## Key facts for agents
+
+- Install: from source — `git clone https://github.com/opensmm-protocol/mcp-server.git && cd mcp-server && npm ci && npm run gateway` (REST /v0 + MCP /mcp on :8080, Node.js >= 22.18, no API key needed); Docker from the same checkout — `git clone https://github.com/opensmm-protocol/mcp-server.git && cd mcp-server && docker build -t opensmm-gateway . && docker run -d --name opensmm -p 127.0.0.1:8080:8080 -v opensmm-data:/data opensmm-gateway`. No npm package and no public image exist, none is planned: the checkout is the install source. No public remote endpoint yet: run the node locally.
+- Public node without a domain (quick tunnel): expose local node with Cloudflare quick tunnel and verify with `npm run verify:node -- <https-url>` — docs/NODES.md («Public URL without a custom domain»).
+- Protocol version: 0.1.0, URL prefix /v0.
+- One rule: the same operation via REST and MCP yields the same domain
+  objects. Same clientReference → same orderId on any transport.
+- Money is decimal strings on integer micro-units. Never floats.
+- Idempotency is protocol-level: Idempotency-Key header (REST) /
+  clientReference (MCP). Replay returns the same order.
+- paymentStatus and executionStatus are separate state machines.
+- Canonical error codes: VALIDATION_FAILED, PAYLOAD_TOO_LARGE, NOT_FOUND,
+  SERVICE_UNAVAILABLE, QUOTE_EXPIRED, QUOTE_MISMATCH, PAYMENT_REQUIRED,
+  SETTLEMENT_PENDING, SUBMISSION_UNKNOWN, PROVIDER_REJECTED, POLICY_DENIED,
+  RATE_LIMITED,
+  IDEMPOTENCY_CONFLICT, REFUND_REQUIRED, INTERNAL.
+
+## Acceptance flow
+
+search → quote → create order (HTTP 402 + payment requirements) → settle
+(x402 proof) → execution → poll status → completion. A quote is mandatory
+before ordering and is consumed exactly once.
+
+## Commands (REST / MCP tool)
+
+- getCapabilities — GET /v0/capabilities / get_capabilities
+- listProviders — GET /v0/providers / list_providers
+- registerProvider — POST /v0/providers / register_provider
+- searchServices — GET /v0/services / search_services
+- compareOffers — MCP tool compare_offers (gateway extension)
+- getService — GET /v0/services/{id} / get_service
+- getQuote — POST /v0/quotes / get_quote
+- createOrder — POST /v0/orders / create_order
+- getOrder — GET /v0/orders/{id} / get_order_status
+- cancelOrder — POST /v0/orders/{id}/cancel / cancel_order
+- requestRefill — POST /v0/orders/{id}/refill / request_refill
+
+## Choosing a provider
+
+GET /v0/providers lists pseudonymous nodes (providerKey, lifecycle,
+capabilities, offersCount, gateway-measured metrics). Metrics are measured
+by the gateway from real orders, never self-reported. Quality tiers are
+derived with the open formula in spec/v0 §9.1 — recompute them yourself.
+
+Every search_services offer carries providerRef (the providerKey of the node
+serving it) and quality (measured orders, deliveredRatio, startLatencyMs;
+ratio/latency appear only with sufficient sample). sort=price orders by
+normalized unit price, sort=quality by measured quality, sort=relevance (the
+default) keeps the catalog order; GET /v0/services accepts the same sort
+parameter. compare_offers (platform + objective [+ quantity] [+ currency])
+returns one cheapest offer per provider, cheapest first, each with its
+measured quality and the total price for your quantity — the direct answer to
+«who is cheaper and who is more reliable for this». Offers are ranked inside a
+single currency: prices are never converted, so offers in other currencies are
+reported in excludedCurrencies instead of being ranked against them (pass
+`currency` to pick the one you pay in, codes are case-insensitive; default is
+the most offered currency that covers your quantity).
+SUSPENDED providers never appear.
+
+## Docs
+
+- Protocol spec: spec/v0/README.md (§1–§12)
+- JSON Schemas: spec/v0/schemas/
+- Runnable examples: spec/v0/examples/
+- Provider onboarding (incl. a copy-paste AI prompt): docs/PROVIDER_ONBOARDING.md
+- Node census & quick tunnel (no domain): docs/NODES.md
+- Gateway deployment & production TLS (Caddy): docs/DEPLOY.md
+- MCP Registry: no entry (no published package, no public remote) — docs/REGISTRY.md

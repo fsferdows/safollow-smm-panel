@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and validate manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Validate MCP Registry manifest
+        run: npm run validate:manifest
+
+  container:
+    name: Build image and run container smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Proves the Dockerfile and scripts/smoke-container.sh before a release
+      # publishes the image: build locally, then smoke the same steps an
+      # operator runs after `docker pull`.
+      - name: Build the gateway image
+        run: docker build --tag opensmm-gateway:ci .
+
+      - name: Report image size
+        run: docker image ls opensmm-gateway:ci
+
+      - name: Run the container smoke test
+        env:
+          SMOKE_IMAGE: opensmm-gateway:ci
+        run: scripts/smoke-container.sh
+
+  mcp-stdio:
+    name: Build Dockerfile.mcp and smoke MCP over stdio
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # The image is built for the check only and is never pushed.
+      - name: Build the MCP stdio image
+        run: docker build -f Dockerfile.mcp -t opensmm-mcp . && docker image ls opensmm-mcp
+
+      - name: Smoke initialize and tools/list over stdio
+        run: |
+          set -euo pipefail
+          {
+            printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}'
+            printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+            printf '%s\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+          } | timeout 60 docker run -i --rm opensmm-mcp | tee mcp-stdio.out
+          for id in 1 2; do
+            line=$(grep -E "\"id\":$id[,}]" mcp-stdio.out || true)
+            case "$line" in
+              *'"result"'*) echo "id=$id: result OK" ;;
+              *) echo "id=$id: no result in response" >&2; exit 1 ;;
+            esac
+          done
